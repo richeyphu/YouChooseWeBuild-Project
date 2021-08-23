@@ -4,3 +4,7 @@
 # YouChooseWeBuild-Project
 
 **ITE-418 Final Project (Python 1/2564)**
+
+## Development Tools
+* **IDE :** `PyCharm Professional 2021.1.2 or newer`
+* **Interpreter :** `Python 3.9`
