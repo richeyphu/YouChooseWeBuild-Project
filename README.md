@@ -8,3 +8,5 @@
 ## Development Tools
 * **IDE :** `PyCharm Professional 2021.1.2 or newer`
 * **Interpreter :** `Python 3.9`
+* **GUI Framework :** `PyQt5 with Qt Designer`
+* **DBaaS :** `MongoDB Atlas`
