@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>frm_payment</class>
- <widget class="QDialog" name="frm_payment">
+ <class>frm_uploadslip</class>
+ <widget class="QDialog" name="frm_uploadslip">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -13,7 +13,7 @@
   <property name="minimumSize">
    <size>
     <width>375</width>
-    <height>480</height>
+    <height>450</height>
    </size>
   </property>
   <property name="maximumSize">
@@ -23,89 +23,34 @@
    </size>
   </property>
   <property name="windowTitle">
-   <string>UCWB - Payment</string>
+   <string>UCWB - Payment Proof</string>
   </property>
   <widget class="QLabel" name="lbl_qrcode">
    <property name="geometry">
     <rect>
-     <x>90</x>
+     <x>30</x>
      <y>100</y>
-     <width>200</width>
-     <height>200</height>
+     <width>321</width>
+     <height>301</height>
     </rect>
    </property>
    <property name="font">
     <font>
      <family>Kanit</family>
-     <pointsize>12</pointsize>
+     <pointsize>16</pointsize>
     </font>
    </property>
+   <property name="styleSheet">
+    <string notr="true"/>
+   </property>
    <property name="text">
-    <string>QR Code</string>
+    <string>Drag and Drop
+ไฟล์รูปภาพสลิปโอนเงิน
+(jpg/png)</string>
    </property>
    <property name="alignment">
     <set>Qt::AlignCenter</set>
    </property>
-  </widget>
-  <widget class="QWidget" name="verticalLayoutWidget">
-   <property name="geometry">
-    <rect>
-     <x>0</x>
-     <y>310</y>
-     <width>371</width>
-     <height>101</height>
-    </rect>
-   </property>
-   <layout class="QVBoxLayout" name="verticalLayout">
-    <item>
-     <widget class="QLabel" name="lbl_accname">
-      <property name="font">
-       <font>
-        <family>Kanit</family>
-        <pointsize>12</pointsize>
-       </font>
-      </property>
-      <property name="text">
-       <string>ชื่อบัญชี : xxxx xxxx</string>
-      </property>
-      <property name="alignment">
-       <set>Qt::AlignCenter</set>
-      </property>
-     </widget>
-    </item>
-    <item>
-     <widget class="QLabel" name="lbl_accno">
-      <property name="font">
-       <font>
-        <family>Kanit</family>
-        <pointsize>12</pointsize>
-       </font>
-      </property>
-      <property name="text">
-       <string>No. : xxx-xxx-xxxx</string>
-      </property>
-      <property name="alignment">
-       <set>Qt::AlignCenter</set>
-      </property>
-     </widget>
-    </item>
-    <item>
-     <widget class="QLabel" name="lbl_amount">
-      <property name="font">
-       <font>
-        <family>Kanit</family>
-        <pointsize>14</pointsize>
-       </font>
-      </property>
-      <property name="text">
-       <string>จำนวน : 0.00 บาท</string>
-      </property>
-      <property name="alignment">
-       <set>Qt::AlignCenter</set>
-      </property>
-     </widget>
-    </item>
-   </layout>
   </widget>
   <widget class="QFrame" name="frame_header">
    <property name="geometry">
@@ -144,8 +89,8 @@
      <string notr="true">color: rgb(255, 255, 255);</string>
     </property>
     <property name="text">
-     <string>กรุณาชำระเงิน
-PromptPay</string>
+     <string>กรุณาอัปโหลด
+หลักฐานการชำระเงิน</string>
     </property>
     <property name="alignment">
      <set>Qt::AlignCenter</set>
@@ -156,7 +101,7 @@ PromptPay</string>
    <property name="geometry">
     <rect>
      <x>70</x>
-     <y>430</y>
+     <y>420</y>
      <width>241</width>
      <height>39</height>
     </rect>
@@ -202,7 +147,6 @@ color: rgb(255, 255, 255);</string>
   </widget>
   <zorder>frame_header</zorder>
   <zorder>lbl_qrcode</zorder>
-  <zorder>verticalLayoutWidget</zorder>
   <zorder>horizontalLayoutWidget</zorder>
  </widget>
  <resources/>
