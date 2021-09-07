@@ -180,7 +180,7 @@ class Ui_frm_register(object):
             if self.isPasswordValid(password, rePassword) and self.isNameValid(name) and self.isUsernameValid(
                     username):
                 # with pymongo.MongoClient(CONN_STR) as conn:
-                with GetDatabase as conn:
+                with GetDatabase() as conn:
                     db = conn.get_database('myShop')
                     db.users.insert_one({'username': username,
                                          'password': password,
@@ -191,14 +191,16 @@ class Ui_frm_register(object):
 
                     msg.setIcon(QMessageBox.Information)
                     msg.setText("Success!")
+                    msg.exec_()
+                    frm_register.close()
             else:
                 msg.setIcon(QMessageBox.Critical)
                 msg.setText("Error!")
+                msg.exec_()
         except Exception as e:
             print(e)
         finally:
-            msg.exec_()
-            frm_register.close()
+            pass
 
 
     def isUsernameValid(self, username):

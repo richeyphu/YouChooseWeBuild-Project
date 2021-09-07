@@ -180,7 +180,7 @@ class Ui_frm_login(object):
         except Exception as e:
             print(e)
         finally:
-            self.clearText()
+            self.clearTextbox()
 
     def clearTextbox(self):
         self.txt_username.clear()
