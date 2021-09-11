@@ -11,7 +11,7 @@ from datetime import datetime
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QMessageBox
 
-from connectdb import GetDatabase
+from ucwblib import GetDatabase, HashPassword
 
 
 class Ui_frm_register(object):
@@ -20,6 +20,9 @@ class Ui_frm_register(object):
         frm_register.resize(500, 450)
         frm_register.setMinimumSize(QtCore.QSize(500, 450))
         frm_register.setMaximumSize(QtCore.QSize(500, 450))
+
+        frm_register.setWindowFlag(QtCore.Qt.WindowMinimizeButtonHint)
+
         self.formLayoutWidget = QtWidgets.QWidget(frm_register)
         self.formLayoutWidget.setGeometry(QtCore.QRect(50, 100, 381, 221))
         self.formLayoutWidget.setObjectName("formLayoutWidget")
@@ -106,6 +109,7 @@ class Ui_frm_register(object):
         self.txt_password = QtWidgets.QLineEdit(self.formLayoutWidget)
         font = QtGui.QFont()
         font.setFamily("Kanit Light")
+        font.setPointSize(10)
         self.txt_password.setFont(font)
         self.txt_password.setEchoMode(QtWidgets.QLineEdit.Password)
         self.txt_password.setObjectName("txt_password")
@@ -113,7 +117,7 @@ class Ui_frm_register(object):
 
         self.txt_repassword = QtWidgets.QLineEdit(self.formLayoutWidget)
         font = QtGui.QFont()
-        font.setFamily("Kanit")
+        font.setFamily("Kanit Light")
         font.setPointSize(10)
         self.txt_repassword.setFont(font)
         self.txt_repassword.setEchoMode(QtWidgets.QLineEdit.Password)
@@ -169,22 +173,27 @@ class Ui_frm_register(object):
     def register(self):
         try:
             username = self.txt_username.text().lower()
-            name = self.txt_name.text().capitalize()
+            name = self.txt_name.text().title()
+            tel = self.txt_tel.text()
+            email = self.txt_email.text().lower()
             password = self.txt_password.text()
-            rePassword = self.txt_repassword.text()
+            re_password = self.txt_repassword.text()
 
             msg = QMessageBox()
             msg.setWindowTitle("Register")
             msg.setStyleSheet("QLabel{min-width: 50px;}")
 
-            if self.isPasswordValid(password, rePassword) and self.isNameValid(name) and self.isUsernameValid(
+            if self.isPasswordValid(password, re_password) and self.isNameValid(name) and self.isUsernameValid(
                     username):
+                hashed_pwd = HashPassword(password)
                 # with pymongo.MongoClient(CONN_STR) as conn:
                 with GetDatabase() as conn:
                     db = conn.get_database('myShop')
                     db.users.insert_one({'username': username,
-                                         'password': password,
+                                         'password': hashed_pwd.getSaltAndHashChunk(),
                                          'name': name,
+                                         'tel': tel,
+                                         'email': email,
                                          'joined_date': datetime.now(),
                                          'last_access': datetime.now()
                                          })
@@ -202,13 +211,12 @@ class Ui_frm_register(object):
         finally:
             pass
 
-
     def isUsernameValid(self, username):
         if not username.isalnum():
             return False
         # with pymongo.MongoClient(CONN_STR) as conn:
-        with GetDatabase as conn:
-            db = conn.get_database('QT')
+        with GetDatabase() as conn:
+            db = conn.get_database('myShop')
             condition = {'username': {"$regex": f'^{username}$', "$options": "i"}}
             found = db.users.count_documents(condition)
             if found:

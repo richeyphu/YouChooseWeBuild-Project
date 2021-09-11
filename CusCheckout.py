@@ -16,6 +16,10 @@ class Ui_frm_cus_checkout(object):
     def setupUi(self, frm_cus_checkout):
         frm_cus_checkout.setObjectName("frm_cus_checkout")
         frm_cus_checkout.resize(900, 600)
+
+        frm_cus_checkout.setFixedSize(QtCore.QSize(900, 600))
+        frm_cus_checkout.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
+
         self.tbl_cart = QtWidgets.QTableWidget(frm_cus_checkout)
         self.tbl_cart.setGeometry(QtCore.QRect(30, 110, 481, 411))
         font = QtGui.QFont()

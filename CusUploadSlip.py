@@ -17,6 +17,10 @@ class Ui_frm_cus_uploadslip(object):
         frm_cus_uploadslip.resize(375, 480)
         frm_cus_uploadslip.setMinimumSize(QtCore.QSize(375, 450))
         frm_cus_uploadslip.setMaximumSize(QtCore.QSize(375, 480))
+
+        frm_cus_uploadslip.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
+        # frm_cus_uploadslip.setFixedSize(QtCore.QSize(900, 600))
+
         self.lbl_qrcode = QtWidgets.QLabel(frm_cus_uploadslip)
         self.lbl_qrcode.setGeometry(QtCore.QRect(30, 100, 321, 301))
         font = QtGui.QFont()

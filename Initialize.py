@@ -59,7 +59,7 @@ class Ui_frm_splash(object):
 
 
 def showLoginForm():
-    Login.frm_login.show()
+    Login.frm_login.open()
     # Login.frm_login.exec_()
 
 

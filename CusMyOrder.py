@@ -19,6 +19,10 @@ class Ui_frm_cus_myorder(object):
         frm_cus_myorder.resize(900, 600)
         frm_cus_myorder.setMinimumSize(QtCore.QSize(900, 600))
         frm_cus_myorder.setMaximumSize(QtCore.QSize(900, 600))
+
+        frm_cus_myorder.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
+        # frm_cus_myorder.setFixedSize(QtCore.QSize(900, 600))
+
         self.frame_header = QtWidgets.QFrame(frm_cus_myorder)
         self.frame_header.setGeometry(QtCore.QRect(0, 0, 901, 61))
         self.frame_header.setStyleSheet("background-color: rgb(0, 148, 217);")

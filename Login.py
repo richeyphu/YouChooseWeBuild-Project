@@ -13,7 +13,7 @@ from PyQt5.QtWidgets import QMessageBox
 
 import Register
 import CusMain
-from connectdb import GetDatabase
+from ucwblib import GetDatabase, HashPassword
 
 
 class Ui_frm_login(object):
@@ -22,6 +22,9 @@ class Ui_frm_login(object):
         frm_login.resize(500, 350)
         frm_login.setMinimumSize(QtCore.QSize(500, 350))
         frm_login.setMaximumSize(QtCore.QSize(500, 350))
+
+        frm_login.setWindowFlag(QtCore.Qt.WindowMinimizeButtonHint)
+
         self.formLayoutWidget = QtWidgets.QWidget(frm_login)
         self.formLayoutWidget.setGeometry(QtCore.QRect(90, 110, 321, 71))
         self.formLayoutWidget.setObjectName("formLayoutWidget")
@@ -116,12 +119,60 @@ class Ui_frm_login(object):
         # app.aboutToQuit.connect(self.onLastClosed)
 
     def login(self):
+        login_code = 0
+        try:
+            username = self.txt_username.text()
+            password = self.txt_password.text()
+
+            if username == "" or password == "":
+                return False
+
+            # with pymongo.MongoClient(CONN_STR) as conn:
+            with GetDatabase() as conn:
+                db = conn.get_database('myShop')
+                condition = {'username': {"$regex": f'^{username}$', "$options": "i"}}
+                found = db.users.count_documents(condition)
+                if found:
+                    cursor = db.users.find(condition)
+
+                    # password จาก database
+                    pwd_chunk = HashPassword(cursor[0]['password'])
+                    salt = pwd_chunk.getSaltFromChunk()
+                    key = pwd_chunk.getKeyFromChunk()
+                    # password ที่กรอกจากหน้า login
+                    pwd = HashPassword(password).getHashedKey(salt)
+
+                    if key == pwd:
+                        login_code = 1
+                        setTo = {'$set': {'last_access': datetime.now()}}
+                        db.users.update_one(condition, setTo)
+
+        except Exception as e:
+            print(e)
+
+        finally:
+            msg = QMessageBox()
+            msg.setWindowTitle("Login")
+            msg.setStyleSheet("QLabel{min-width: 50px;}")
+            if login_code == 0:
+                msg.setIcon(QMessageBox.Critical)
+                msg.setText("Error!")
+                msg.exec_()
+            else:
+                msg.setIcon(QMessageBox.Information)
+                msg.setText("Success!")
+                msg.exec_()
+                frm_login.close()
+                self.showMainWindow(username)
+            self.clearTextbox()
+
+    def __login_legacy(self):
         try:
             username = self.txt_username.text()
             password = self.txt_password.text()
 
             msg = QMessageBox()
-            msg.setWindowTitle("Register")
+            msg.setWindowTitle("Login")
             msg.setStyleSheet("QLabel{min-width: 50px;}")
 
             if username == "" or password == "":
@@ -158,6 +209,9 @@ class Ui_frm_login(object):
         finally:
             # msg.exec_()
             self.clearTextbox()
+
+    def isPasswordValid(self):
+        pass
 
     def register(self):
         frm_login.hide()

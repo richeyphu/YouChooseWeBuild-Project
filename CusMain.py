@@ -15,11 +15,9 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import QLocale
 from PyQt5.QtWidgets import QTableWidgetItem
 
-from connectdb import GetDatabase
+from ucwblib import GetDatabase
 import CusCheckout
-import CusPayment
 import CusMyOrder
-import CusUploadSlip
 
 
 class Ui_frm_cus_main(object):
@@ -285,9 +283,13 @@ class Ui_frm_cus_main(object):
         self.retranslateUi(frm_cus_main)
         QtCore.QMetaObject.connectSlotsByName(frm_cus_main)
 
+        # var
+        self.total = 0
+        self.cat_total = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        self.cat_selected = [{}, {}, {}, {}, {}, {}, {}, {}, {}, {}]
+
         self.setUsername()
         self.showProducts()
-        self.total = 0
 
         # Event-Driven
         # Product Categories button clicked
@@ -307,6 +309,16 @@ class Ui_frm_cus_main(object):
         self.btn_settings.clicked.connect(self.myOrder)
 
         # self.tbl_item.mousePressEvent = self.getSelectItem
+        frm_cus_main.keyPressEvent = self.ctrlKey_press
+        frm_cus_main.keyReleaseEvent = self.ctrlKey_release
+
+    def ctrlKey_press(self, event):
+        if event.key() == QtCore.Qt.Key_Control:
+            self.btn_build.setText("Clear All")
+
+    def ctrlKey_release(self, event):
+        if event.key() == QtCore.Qt.Key_Control:
+            self.btn_build.setText("Build Now")
 
     def showProducts(self, cat='101'):
         self.current_cat = cat
@@ -317,12 +329,15 @@ class Ui_frm_cus_main(object):
             condition = {'cat': cat}
             count = db.products.count_documents(condition)
             cursor = db.products.find(condition)
+            # cursor = list(db.products.find(condition))
 
             # สร้างตาราง
             self.setupTable(count)
 
             # เอาข้อมูลใน cursor ไปใส่เป็น item
             self.addToTable(cursor)
+
+            # self.current_catTable = cursor
 
     def addToTable(self, cursor, same_page=False):
         brands = set()
@@ -333,12 +348,19 @@ class Ui_frm_cus_main(object):
             brand = v['brand']
             brands.add(brand)
             keywords.add(v['keyword'])
+            pid = v['pid']
 
             # Spinner สำหรับเลือกจำนวนสินค้า
             self.widget_spin.append(QtWidgets.QSpinBox())
-            self.widget_spin[i].setValue(0)
+            # ตรวจสอบว่าสินค้านี้เคยถูกเลือกไปแล้วหรือเปล่า
+            current_cat_index = int(self.current_cat) % 100 - 1
+            if pid in self.cat_selected[current_cat_index]:
+                qty_value = self.cat_selected[current_cat_index][pid]
+                self.widget_spin[i].setValue(qty_value[0])
+            else:
+                self.widget_spin[i].setValue(0)
             self.widget_spin[i].setLocale(QLocale("en-us"))
-            self.widget_spin[i].valueChanged.connect(partial(self.getSelectItem, i))
+            self.widget_spin[i].valueChanged.connect(partial(self.getSelectItem, i, self.current_cat))
             self.tbl_item.setCellWidget(i, 0, self.widget_spin[i])
 
             self.tbl_item.setItem(i, 1, QTableWidgetItem("{}".format(v['name'])))
@@ -411,19 +433,35 @@ class Ui_frm_cus_main(object):
         # print("sort by = {}".format(sortby))
         # print("FOUND   = {}\n".format(count))
 
-    def getSelectItem(self, index):
+    def getSelectItem(self, index, cat):
         try:
             value = self.widget_spin[index].value()
             price = float(self.tbl_item.item(index, 4).text().replace(',', ''))
-            self.total += value * price
 
-            self.lbl_total.setText("{:,.2f}".format(self.total))
+            cat_index = int(cat) % 100 - 1
+            # self.cat_total[cat_index] = value * price
+            self.cat_selected[cat_index][self.tbl_item.item(index, 5).text()] = (value, price)
+            self.calTotal()
+            # print(self.cat_selected)
+
         except Exception as e:
             print(e)
 
         # print("value = {}".format(value))
         # print("price = {}".format(price))
         # print("total = {}".format(total))
+
+    def calTotal(self):
+        for i, cat_dict in enumerate(self.cat_selected):
+            pid_list = cat_dict.keys()
+            sum_cat = 0
+            for pid in pid_list:
+                sum_cat += cat_dict[pid][0] * cat_dict[pid][1]
+                # print("{} = {}".format(cat_dict[pid], cat_dict[pid][0] * cat_dict[pid][1]))
+            self.cat_total[i] = sum_cat
+        # print()
+        self.total = sum(self.cat_total)
+        self.lbl_total.setText("{:,.2f}".format(self.total))
 
     def setupTable(self, count):
         # Table Widget
@@ -432,7 +470,7 @@ class Ui_frm_cus_main(object):
         self.tbl_item.setEditTriggers(QtWidgets.QTableWidget.NoEditTriggers)  # Table Read-only
 
         # สร้าง Header
-        header1 = QtWidgets.QTableWidgetItem("qty")
+        header1 = QtWidgets.QTableWidgetItem("QTY")
         header2 = QtWidgets.QTableWidgetItem("ชื่อ")
         header3 = QtWidgets.QTableWidgetItem("รายละเอียด")
         header4 = QtWidgets.QTableWidgetItem("ยี่ห้อ")
@@ -457,6 +495,8 @@ class Ui_frm_cus_main(object):
         brands = sorted(brands, key=str.casefold)
         keywords = sorted(keywords, key=str.casefold)
 
+        self.cmb_sortby.setCurrentIndex(0)
+
         self.cmb_brand.clear()
         self.cmb_brand.addItem("Show All")
         for brand in brands:
@@ -471,7 +511,13 @@ class Ui_frm_cus_main(object):
         self.lbl_hi.setText("Hi, {}".format(USERNAME))
 
     def buildNow(self):
-        CusCheckout.frm_cus_checkout.exec_()
+        if self.btn_build.text() == "Build Now":
+            CusCheckout.frm_cus_checkout.exec_()
+        else:
+            self.lbl_total.setText("0.00")
+            for _dict in self.cat_selected:
+                _dict.clear()
+            self.showProducts()
 
     def myOrder(self):
         CusMyOrder.frm_cus_myorder.exec_()
