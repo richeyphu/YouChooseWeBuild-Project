@@ -155,6 +155,7 @@ class Ui_frm_cus_payment(object):
         self.btn_confirm.setText(_translate("frm_cus_payment", "ยืนยัน"))
 
 
+frm_cus_payment = None
 if __name__ == "__main__":
     import sys
 
@@ -164,10 +165,10 @@ if __name__ == "__main__":
     ui.setupUi(frm_cus_payment)
     frm_cus_payment.show()
     sys.exit(app.exec_())
-else:
-    import sys
-
-    app = QtWidgets.QApplication(sys.argv)
-    frm_cus_payment = QtWidgets.QDialog()
-    ui = Ui_frm_cus_payment()
-    ui.setupUi(frm_cus_payment)
+# else:
+#     import sys
+#
+#     app = QtWidgets.QApplication(sys.argv)
+#     frm_cus_payment = QtWidgets.QDialog()
+#     ui = Ui_frm_cus_payment()
+#     ui.setupUi(frm_cus_payment)

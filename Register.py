@@ -231,7 +231,8 @@ class Ui_frm_register(object):
 
     def cancel(self):
         try:
-            frm_register.close()
+            # frm_register.close()
+            frm_register.hide()
         except Exception as e:
             print(e)
 
@@ -249,6 +250,7 @@ class Ui_frm_register(object):
         self.lbl_title.setText(_translate("frm_register", "You Choose, We Build"))
 
 
+frm_register = None
 if __name__ == "__main__":
     import sys
     app = QtWidgets.QApplication(sys.argv)
@@ -257,9 +259,9 @@ if __name__ == "__main__":
     ui.setupUi(frm_register)
     frm_register.show()
     sys.exit(app.exec_())
-else:
-    import sys
-    app = QtWidgets.QApplication(sys.argv)
-    frm_register = QtWidgets.QDialog()
-    ui = Ui_frm_register()
-    ui.setupUi(frm_register)
+# else:
+#     import sys
+#     app = QtWidgets.QApplication(sys.argv)
+#     frm_register = QtWidgets.QDialog()
+#     ui = Ui_frm_register()
+#     ui.setupUi(frm_register)

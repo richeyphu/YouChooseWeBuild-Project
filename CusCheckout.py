@@ -9,8 +9,11 @@
 
 
 from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5.QtWidgets import QMessageBox, QTableWidgetItem
 
 import CusPayment
+from ucwblib import GetDatabase
+
 
 class Ui_frm_cus_checkout(object):
     def setupUi(self, frm_cus_checkout):
@@ -235,11 +238,109 @@ class Ui_frm_cus_checkout(object):
         self.retranslateUi(frm_cus_checkout)
         QtCore.QMetaObject.connectSlotsByName(frm_cus_checkout)
 
+        # self.setCart()  # <-- uncomment this if directly run from this file
+        self.showTable()
+
         # Event-Driven
         self.btn_confirm.clicked.connect(self.confirmOrder)
+        self.btn_cancel.clicked.connect(self.cancel)
+
+    def setCart(self, cart: dict = {}):
+        self.cart = cart
+
+    def showTable(self):
+        # with pymongo.MongoClient(CONN_STR) as conn:
+
+        with GetDatabase() as conn:
+            db = conn.get_database('myShop')
+            condition = {'name': 'shipping_fee'}
+            # count = db.settings.count_documents(condition)
+            cursor = db.settings.find(condition)
+            shipping_fee = cursor[0]['value']
+
+            # สร้างตาราง
+            self.addToTable(self.cart, shipping_fee=shipping_fee)
+
+    def addToTable(self, cart, shipping_fee=0):
+        cart_list = self.convertCartToList(cart)
+        num_row = len(cart_list) + 1
+        self.setupTable(num_row)
+        net_total = shipping_fee
+
+        for i, v in enumerate(cart_list):
+            price = v['price']
+            qty = v['qty']
+            total = price * qty
+            net_total += total
+
+            self.tbl_cart.setItem(i, 0, QTableWidgetItem("{}".format(v['name'])))
+            item_price = QTableWidgetItem("{:,.2f}".format(price))
+            item_price.setTextAlignment(QtCore.Qt.AlignRight)
+            self.tbl_cart.setItem(i, 1, item_price)
+            item_qty = QTableWidgetItem("{}".format(qty))
+            item_qty.setTextAlignment(QtCore.Qt.AlignRight)
+            self.tbl_cart.setItem(i, 2, item_qty)
+            item_total = QTableWidgetItem("{:,.2f}".format(total))
+            item_total.setTextAlignment(QtCore.Qt.AlignRight)
+            self.tbl_cart.setItem(i, 3, item_total)
+
+        self.tbl_cart.setItem(num_row - 1, 0, QTableWidgetItem("ค่าจัดส่ง"))
+        item_shipping = QTableWidgetItem("{:,.2f}".format(shipping_fee))
+        item_shipping.setTextAlignment(QtCore.Qt.AlignRight)
+        self.tbl_cart.setItem(num_row - 1, 3, item_shipping)
+
+        self.lbl_total.setText("ราคาสุทธิ {:,.2f} บาท".format(net_total))
+
+    def convertCartToList(self, cart):
+        cart_list = list()
+        for cat in cart:
+            for item in cat.items():
+                item[1]['pid'] = item[0]
+                cart_list.append(item[1])
+        return cart_list
+
+    def setupTable(self, count):
+        # Table Widget
+        self.tbl_cart.setRowCount(count)
+        self.tbl_cart.setColumnCount(4)
+        self.tbl_cart.setEditTriggers(QtWidgets.QTableWidget.NoEditTriggers)  # Table Read-only
+
+        # สร้าง Header
+        header1 = QtWidgets.QTableWidgetItem("รายการ")
+        header2 = QtWidgets.QTableWidgetItem("ราคา/หน่วย")
+        header3 = QtWidgets.QTableWidgetItem("จำนวน")
+        header4 = QtWidgets.QTableWidgetItem("รวม")
+
+        # ใส่ Header ให้ Table
+        self.tbl_cart.setHorizontalHeaderItem(0, header1)
+        self.tbl_cart.setHorizontalHeaderItem(1, header2)
+        self.tbl_cart.setHorizontalHeaderItem(2, header3)
+        self.tbl_cart.setHorizontalHeaderItem(3, header4)
+
+        # ตั้งค่าความกว้าง column
+        self.tbl_cart.setColumnWidth(0, 220)
+        self.tbl_cart.setColumnWidth(1, 90)
+        self.tbl_cart.setColumnWidth(2, 50)
+        self.tbl_cart.setColumnWidth(4, 60)
 
     def confirmOrder(self):
-        CusPayment.frm_cus_payment.exec_()
+        # CusPayment.frm_cus_payment.exec_()
+        frm_cus_payment = QtWidgets.QDialog()
+        _ui = CusPayment.Ui_frm_cus_payment()
+        _ui.setupUi(frm_cus_payment)
+        CusPayment.frm_cus_payment = frm_cus_payment
+        frm_cus_payment.exec_()
+
+        msg = QMessageBox()
+        msg.setWindowTitle("ขอบคุณที่ใช้บริการ")
+        msg.setIcon(QMessageBox.Information)
+        msg.setText("กรุณายืนยันหลักฐานการชำระเงินที่หน้า My Order")
+        msg.exec_()
+
+        frm_cus_checkout.close()
+
+    def cancel(self):
+        frm_cus_checkout.close()
 
     def retranslateUi(self, frm_cus_checkout):
         _translate = QtCore.QCoreApplication.translate
@@ -271,6 +372,7 @@ class Ui_frm_cus_checkout(object):
         self.lbl_total.setText(_translate("frm_cus_checkout", "ราคาสุทธิ 0.00 บาท"))
 
 
+frm_cus_checkout = None
 if __name__ == "__main__":
     import sys
 
@@ -280,10 +382,10 @@ if __name__ == "__main__":
     ui.setupUi(frm_cus_checkout)
     frm_cus_checkout.show()
     sys.exit(app.exec_())
-else:
-    import sys
-
-    app = QtWidgets.QApplication(sys.argv)
-    frm_cus_checkout = QtWidgets.QDialog()
-    ui = Ui_frm_cus_checkout()
-    ui.setupUi(frm_cus_checkout)
+# else:
+#     import sys
+#
+#     app = QtWidgets.QApplication(sys.argv)
+#     frm_cus_checkout = QtWidgets.QDialog()
+#     ui = Ui_frm_cus_checkout()
+#     ui.setupUi(frm_cus_checkout)

@@ -217,7 +217,12 @@ class Ui_frm_login(object):
         frm_login.hide()
         self.clearTextbox()
         try:
-            Register.frm_register.exec_()
+            frm_register = QtWidgets.QDialog()
+            _ui = Register.Ui_frm_register()
+            _ui.setupUi(frm_register)
+            Register.frm_register = frm_register
+            frm_register.exec_()
+            # Register.frm_register.exec_()
         except Exception as e:
             print(e)
         finally:
@@ -244,9 +249,15 @@ class Ui_frm_login(object):
         if username == "admin":
             print("Shows admin main")
         else:
-            CusMain.USERNAME = username
-            CusMain.setup_ui()
-            CusMain.frm_cus_main.show()
+            try:
+                CusMain.USERNAME = username
+                frm_cus_main = QtWidgets.QMainWindow()
+                _ui = CusMain.Ui_frm_cus_main()
+                _ui.setupUi(frm_cus_main)
+                CusMain.frm_cus_main = frm_cus_main
+                frm_cus_main.show()
+            except Exception as e:
+                print(e)
 
     def onLastClosed(self):
         print("bye")
@@ -263,6 +274,7 @@ class Ui_frm_login(object):
         self.lbl_title.setText(_translate("frm_login", "You Choose, We Build"))
 
 
+frm_login = None
 if __name__ == "__main__":
     import sys
     app = QtWidgets.QApplication(sys.argv)
@@ -280,4 +292,3 @@ else:
         ui.setupUi(frm_login)
     except Exception as e:
         print(e)
-

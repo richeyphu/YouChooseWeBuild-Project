@@ -356,7 +356,8 @@ class Ui_frm_cus_main(object):
             current_cat_index = int(self.current_cat) % 100 - 1
             if pid in self.cat_selected[current_cat_index]:
                 qty_value = self.cat_selected[current_cat_index][pid]
-                self.widget_spin[i].setValue(qty_value[0])
+                self.widget_spin[i].setValue(qty_value['qty'])
+                # self.widget_spin[i].setValue(qty_value[0])
             else:
                 self.widget_spin[i].setValue(0)
             self.widget_spin[i].setLocale(QLocale("en-us"))
@@ -435,12 +436,16 @@ class Ui_frm_cus_main(object):
 
     def getSelectItem(self, index, cat):
         try:
+            name = self.tbl_item.item(index, 1).text()
             value = self.widget_spin[index].value()
             price = float(self.tbl_item.item(index, 4).text().replace(',', ''))
 
             cat_index = int(cat) % 100 - 1
             # self.cat_total[cat_index] = value * price
-            self.cat_selected[cat_index][self.tbl_item.item(index, 5).text()] = (value, price)
+            # self.cat_selected[cat_index][self.tbl_item.item(index, 5).text()] = (value, price)
+            self.cat_selected[cat_index][self.tbl_item.item(index, 5).text()] = {'name': name,
+                                                                                 'price': price,
+                                                                                 'qty': value}
             self.calTotal()
             # print(self.cat_selected)
 
@@ -456,7 +461,8 @@ class Ui_frm_cus_main(object):
             pid_list = cat_dict.keys()
             sum_cat = 0
             for pid in pid_list:
-                sum_cat += cat_dict[pid][0] * cat_dict[pid][1]
+                # sum_cat += cat_dict[pid][0] * cat_dict[pid][1]
+                sum_cat += cat_dict[pid]['price'] * cat_dict[pid]['qty']
                 # print("{} = {}".format(cat_dict[pid], cat_dict[pid][0] * cat_dict[pid][1]))
             self.cat_total[i] = sum_cat
         # print()
@@ -512,12 +518,21 @@ class Ui_frm_cus_main(object):
 
     def buildNow(self):
         if self.btn_build.text() == "Build Now":
-            CusCheckout.frm_cus_checkout.exec_()
+            frm_cus_checkout = QtWidgets.QDialog()
+            _ui = CusCheckout.Ui_frm_cus_checkout()
+            _ui.setCart(self.cat_selected)
+            _ui.setupUi(frm_cus_checkout)
+            CusCheckout.frm_cus_checkout = frm_cus_checkout
+            frm_cus_checkout.exec_()
+            # CusCheckout.frm_cus_checkout.exec_()
         else:
-            self.lbl_total.setText("0.00")
-            for _dict in self.cat_selected:
-                _dict.clear()
-            self.showProducts()
+            self.clearCart()
+
+    def clearCart(self):
+        self.lbl_total.setText("0.00")
+        for _dict in self.cat_selected:
+            _dict.clear()
+        self.showProducts()
 
     def myOrder(self):
         CusMyOrder.frm_cus_myorder.exec_()
@@ -564,7 +579,7 @@ class Ui_frm_cus_main(object):
 
 
 USERNAME = "{username}"
-
+frm_cus_main = None
 if __name__ == "__main__":
     import sys
 
@@ -574,15 +589,15 @@ if __name__ == "__main__":
     ui.setupUi(frm_cus_main)
     frm_cus_main.show()
     sys.exit(app.exec_())
-else:
-    import sys
+# else:
+#     import sys
+#
+#     app = QtWidgets.QApplication(sys.argv)
+#     frm_cus_main = QtWidgets.QMainWindow()
+#     # ui = Ui_frm_cus_main()
+#     # ui.setupUi(frm_cus_main)
 
-    app = QtWidgets.QApplication(sys.argv)
-    frm_cus_main = QtWidgets.QMainWindow()
-    # ui = Ui_frm_cus_main()
-    # ui.setupUi(frm_cus_main)
 
-
-def setup_ui():
-    ui = Ui_frm_cus_main()
-    ui.setupUi(frm_cus_main)
+# def setup_ui():
+#     ui = Ui_frm_cus_main()
+#     ui.setupUi(frm_cus_main)

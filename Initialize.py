@@ -59,6 +59,11 @@ class Ui_frm_splash(object):
 
 
 def showLoginForm():
+    # frm_login = QtWidgets.QDialog()
+    # _ui = Login.Ui_frm_login()
+    # _ui.setupUi(frm_login)
+    # Login.frm_login = frm_login
+    # frm_login.open()
     Login.frm_login.open()
     # Login.frm_login.exec_()
 
