@@ -129,7 +129,7 @@ class Ui_frm_login(object):
 
             # with pymongo.MongoClient(CONN_STR) as conn:
             with GetDatabase() as conn:
-                db = conn.get_database('myShop')
+                db = conn.get_database('ucwb')
                 condition = {'username': {"$regex": f'^{username}$', "$options": "i"}}
                 found = db.users.count_documents(condition)
                 if found:
@@ -183,7 +183,7 @@ class Ui_frm_login(object):
 
             # with pymongo.MongoClient(CONN_STR) as conn:
             with GetDatabase() as conn:
-                db = conn.get_database('myShop')
+                db = conn.get_database('ucwb')
                 con1 = {'username': {"$regex": f'^{username}$', "$options": "i"}}
                 con2 = {'password': password}
                 where = {'$and': [con1, con2]}
@@ -250,9 +250,9 @@ class Ui_frm_login(object):
             print("Shows admin main")
         else:
             try:
-                CusMain.USERNAME = username
+                # CusMain.USERNAME = username
                 frm_cus_main = QtWidgets.QMainWindow()
-                _ui = CusMain.Ui_frm_cus_main()
+                _ui = CusMain.Ui_frm_cus_main(username)
                 _ui.setupUi(frm_cus_main)
                 CusMain.frm_cus_main = frm_cus_main
                 frm_cus_main.show()

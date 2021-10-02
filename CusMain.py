@@ -13,14 +13,22 @@ import pymongo
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import QLocale
-from PyQt5.QtWidgets import QTableWidgetItem
+from PyQt5.QtWidgets import QTableWidgetItem, QMessageBox
 
 from ucwblib import GetDatabase
 import CusCheckout
 import CusMyOrder
 
+USERNAME = "{username}"
+
 
 class Ui_frm_cus_main(object):
+
+    def __init__(self, username=USERNAME):
+        self.username = username
+        self.cat_selected = [{}, {}, {}, {}, {}, {}, {}, {}, {}, {}]
+        self.cat_total = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        self.total = 0
 
     def setupUi(self, frm_cus_main):
         frm_cus_main.setObjectName("frm_cus_main")
@@ -283,11 +291,7 @@ class Ui_frm_cus_main(object):
         self.retranslateUi(frm_cus_main)
         QtCore.QMetaObject.connectSlotsByName(frm_cus_main)
 
-        # var
-        self.total = 0
-        self.cat_total = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-        self.cat_selected = [{}, {}, {}, {}, {}, {}, {}, {}, {}, {}]
-
+        ###
         self.setUsername()
         self.showProducts()
 
@@ -325,7 +329,7 @@ class Ui_frm_cus_main(object):
 
         # with pymongo.MongoClient(CONN_STR) as conn:
         with GetDatabase() as conn:
-            db = conn.get_database('myShop')
+            db = conn.get_database('ucwb')
             condition = {'cat': cat}
             count = db.products.count_documents(condition)
             cursor = db.products.find(condition)
@@ -418,7 +422,7 @@ class Ui_frm_cus_main(object):
         # print(sort_con)
 
         with GetDatabase() as conn:
-            db = conn.get_database('myShop')
+            db = conn.get_database('ucwb')
 
             where = {'$and': conditions}  # if len(conditions) > 0 else {}
 
@@ -471,6 +475,7 @@ class Ui_frm_cus_main(object):
 
     def setupTable(self, count):
         # Table Widget
+        self.tbl_item.setRowCount(0)  # Reset table
         self.tbl_item.setRowCount(count)
         self.tbl_item.setColumnCount(6)
         self.tbl_item.setEditTriggers(QtWidgets.QTableWidget.NoEditTriggers)  # Table Read-only
@@ -514,19 +519,36 @@ class Ui_frm_cus_main(object):
             self.cmb_spec.addItem(keyword)
 
     def setUsername(self):
-        self.lbl_hi.setText("Hi, {}".format(USERNAME))
+        self.lbl_hi.setText("Hi, {}".format(self.username))
 
     def buildNow(self):
         if self.btn_build.text() == "Build Now":
-            frm_cus_checkout = QtWidgets.QDialog()
-            _ui = CusCheckout.Ui_frm_cus_checkout()
-            _ui.setCart(self.cat_selected)
-            _ui.setupUi(frm_cus_checkout)
-            CusCheckout.frm_cus_checkout = frm_cus_checkout
-            frm_cus_checkout.exec_()
-            # CusCheckout.frm_cus_checkout.exec_()
+            cart_list = self.convertCartToList(self.cat_selected)
+            if cart_list:  # Check if cart is not empty
+                frm_cus_checkout = QtWidgets.QDialog()
+                _ui = CusCheckout.Ui_frm_cus_checkout(cart=cart_list, username=self.username)
+                # _ui.setCart(cart_list)
+                _ui.setupUi(frm_cus_checkout)
+                CusCheckout.frm_cus_checkout = frm_cus_checkout
+                frm_cus_checkout.exec_()
+                # CusCheckout.frm_cus_checkout.exec_()
+            else:
+                msg = QMessageBox()
+                msg.setWindowTitle("Build Now")
+                msg.setIcon(QMessageBox.Information)
+                msg.setText("กรุณาเลือกสินค้าก่อน")
+                msg.exec_()
         else:
             self.clearCart()
+
+    def convertCartToList(self, cart):
+        cart_list = list()
+        for cat in cart:
+            for item in cat.items():
+                if item[1]['qty']:  # Check if 'qty' is not 0
+                    item[1]['pid'] = item[0]
+                    cart_list.append(item[1])
+        return cart_list
 
     def clearCart(self):
         self.lbl_total.setText("0.00")
@@ -578,7 +600,6 @@ class Ui_frm_cus_main(object):
         self.btn_settings.setText(_translate("frm_cus_main", "My Orders"))
 
 
-USERNAME = "{username}"
 frm_cus_main = None
 if __name__ == "__main__":
     import sys
