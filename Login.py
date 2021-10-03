@@ -283,12 +283,12 @@ if __name__ == "__main__":
     ui.setupUi(frm_login)
     frm_login.show()
     sys.exit(app.exec_())
-else:
-    try:
-        import sys
-        app = QtWidgets.QApplication(sys.argv)
-        frm_login = QtWidgets.QDialog()
-        ui = Ui_frm_login()
-        ui.setupUi(frm_login)
-    except Exception as e:
-        print(e)
+# else:
+#     try:
+#         import sys
+#         app = QtWidgets.QApplication(sys.argv)
+#         frm_login = QtWidgets.QDialog()
+#         ui = Ui_frm_login()
+#         ui.setupUi(frm_login)
+#     except Exception as e:
+#         print(e)

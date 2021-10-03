@@ -12,6 +12,9 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 
 
 class Ui_frm_cus_uploadslip(object):
+    def __init__(self, username=""):
+        self.username = username
+
     def setupUi(self, frm_cus_uploadslip):
         frm_cus_uploadslip.setObjectName("frm_cus_uploadslip")
         frm_cus_uploadslip.resize(375, 480)
@@ -79,6 +82,12 @@ class Ui_frm_cus_uploadslip(object):
         self.retranslateUi(frm_cus_uploadslip)
         QtCore.QMetaObject.connectSlotsByName(frm_cus_uploadslip)
 
+        # Event-Driven
+        self.btn_cancel.clicked.connect(self.cancel)
+
+    def cancel(self):
+        frm_cus_uploadslip.hide()
+
     def retranslateUi(self, frm_cus_uploadslip):
         _translate = QtCore.QCoreApplication.translate
         frm_cus_uploadslip.setWindowTitle(_translate("frm_cus_uploadslip", "UCWB - Payment Proof"))
@@ -91,6 +100,7 @@ class Ui_frm_cus_uploadslip(object):
         self.btn_confirm.setText(_translate("frm_cus_uploadslip", "ยืนยัน"))
 
 
+frm_cus_uploadslip = None
 if __name__ == "__main__":
     import sys
 
@@ -100,10 +110,10 @@ if __name__ == "__main__":
     ui.setupUi(frm_cus_uploadslip)
     frm_cus_uploadslip.show()
     sys.exit(app.exec_())
-else:
-    import sys
-
-    app = QtWidgets.QApplication(sys.argv)
-    frm_cus_uploadslip = QtWidgets.QDialog()
-    ui = Ui_frm_cus_uploadslip()
-    ui.setupUi(frm_cus_uploadslip)
+# else:
+#     import sys
+#
+#     app = QtWidgets.QApplication(sys.argv)
+#     frm_cus_uploadslip = QtWidgets.QDialog()
+#     ui = Ui_frm_cus_uploadslip()
+#     ui.setupUi(frm_cus_uploadslip)

@@ -12,6 +12,7 @@ import threading
 from time import sleep
 
 from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5.QtWidgets import QDesktopWidget
 
 import Login
 
@@ -28,10 +29,10 @@ class Ui_frm_splash(object):
         frm_splash.setWindowFlags(flags)
 
         # Make window center
-        # qtRectangle = frm_splash.frameGeometry()
-        # centerPoint = QDesktopWidget().availableGeometry().center()
-        # qtRectangle.moveCenter(centerPoint)
-        # frm_splash.move(qtRectangle.topLeft())
+        qtRectangle = frm_splash.frameGeometry()
+        centerPoint = QDesktopWidget().availableGeometry().center()
+        qtRectangle.moveCenter(centerPoint)
+        frm_splash.move(qtRectangle.topLeft())
 
         self.frame_header = QtWidgets.QFrame(frm_splash)
         self.frame_header.setGeometry(QtCore.QRect(0, 0, 521, 415))
@@ -59,12 +60,12 @@ class Ui_frm_splash(object):
 
 
 def showLoginForm():
-    # frm_login = QtWidgets.QDialog()
-    # _ui = Login.Ui_frm_login()
-    # _ui.setupUi(frm_login)
-    # Login.frm_login = frm_login
-    # frm_login.open()
-    Login.frm_login.open()
+    frm_login = QtWidgets.QDialog()
+    _ui = Login.Ui_frm_login()
+    _ui.setupUi(frm_login)
+    Login.frm_login = frm_login
+    frm_login.open()
+    # Login.frm_login.open()
     # Login.frm_login.exec_()
 
 
@@ -76,20 +77,26 @@ def transition():
     frm_splash.close()
 
 
-try:
-    # Creates Form
-    app = QtWidgets.QApplication(sys.argv)
-    frm_splash = QtWidgets.QDialog()
-    ui = Ui_frm_splash()
-    ui.setupUi(frm_splash)
+def init():
+    global frm_splash
+    global app
 
-    t1 = threading.Thread(target=transition)
-    t1.start()
-    showLoginForm()
-except Exception as e:
-    print(e)
+    try:
+        # Creates Form
+        app = QtWidgets.QApplication(sys.argv)
+        frm_splash = QtWidgets.QDialog()
+        ui = Ui_frm_splash()
+        ui.setupUi(frm_splash)
 
-if __name__ == "__main__":
-    # Shows Form
+        t1 = threading.Thread(target=transition)
+        t1.start()
+        showLoginForm()
+    except Exception as e:
+        print(e)
+
     frm_splash.show()
     sys.exit(app.exec_())
+
+
+if __name__ == "__main__":
+    init()

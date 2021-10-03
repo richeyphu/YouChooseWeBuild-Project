@@ -557,7 +557,12 @@ class Ui_frm_cus_main(object):
         self.showProducts()
 
     def myOrder(self):
-        CusMyOrder.frm_cus_myorder.exec_()
+        # CusMyOrder.frm_cus_myorder.exec_()
+        frm_cus_myorder = QtWidgets.QDialog()
+        _ui = CusMyOrder.Ui_frm_cus_myorder(username=self.username)
+        _ui.setupUi(frm_cus_myorder)
+        CusMyOrder.frm_cus_myorder = frm_cus_myorder
+        frm_cus_myorder.exec_()
 
     def retranslateUi(self, frm_cus_main):
         _translate = QtCore.QCoreApplication.translate

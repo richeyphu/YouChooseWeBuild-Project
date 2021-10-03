@@ -17,7 +17,7 @@ from ucwblib import GetDatabase
 
 class Ui_frm_cus_checkout(object):
 
-    def __init__(self, cart={}, username=""):
+    def __init__(self, cart={}, username=None):
         self.tax_rate = 0
         self.discount = 0
         self.username = username
@@ -386,9 +386,9 @@ class Ui_frm_cus_checkout(object):
             frm_cus_checkout.close()
 
     def checkCusInfo(self):
-        name = self.txt_name.text()
-        tel = self.txt_tel.text()
-        address = self.txt_address.toPlainText()
+        name = self.txt_name.text().strip()
+        tel = self.txt_tel.text().strip()
+        address = self.txt_address.toPlainText().strip()
 
         msg = QMessageBox()
         msg.setWindowTitle("Checkout Error")

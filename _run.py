@@ -1,16 +1,6 @@
-import sys
-from Initialize import frm_splash as init
-from PyQt5 import QtWidgets
+# Runs YouChooseWeBuild-Project
 
-
-def run():
-    try:
-        app = QtWidgets.QApplication(sys.argv)
-        init.show()
-        sys.exit(app.exec_())
-    except Exception as e:
-        print(e)
-
+from Initialize import init as run
 
 if __name__ == '__main__':
     run()
