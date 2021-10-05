@@ -418,7 +418,7 @@ class Ui_frm_cus_checkout(object):
         tel = self.txt_tel.text()
         address = self.txt_address.toPlainText()
         msg = QMessageBox()
-        msg.setWindowTitle("บันทึกที่อยู่")
+        msg.setWindowTitle("บันทึกข้อมูลการจัดส่ง")
 
         with GetDatabase() as conn:
             db = conn.get_database('ucwb')
@@ -430,7 +430,7 @@ class Ui_frm_cus_checkout(object):
                                                     'address': address}}}
                 db.users.update_one(con, setTo)
                 msg.setIcon(QMessageBox.Information)
-                msg.setText("บันทึกที่อยู่สำเร็จ!")
+                msg.setText("บันทึกข้อมูลการจัดส่งสำเร็จ!")
             else:
                 msg.setIcon(QMessageBox.Critical)
                 msg.setText("Error: Cannot save shipping info\nPlease login again...")
@@ -478,7 +478,8 @@ class Ui_frm_cus_checkout(object):
                                   'cart': self.cart,
                                   'shipping_info': {'name': name,
                                                     'tel': tel,
-                                                    'address': address},
+                                                    'address': address,
+                                                    'shipping': (True if self.rdo_shipping1.isChecked() else False)},
                                   'coupon': coupon,
                                   'date': datetime.now(),
                                   'status': status
@@ -504,7 +505,7 @@ class Ui_frm_cus_checkout(object):
         self.lbl_name.setText(_translate("frm_cus_checkout", "ชื่อ-นามสกุล"))
         self.lbl_tel.setText(_translate("frm_cus_checkout", "เบอร์โทรศัพท์"))
         self.lbl_address.setText(_translate("frm_cus_checkout", "ที่อยู่"))
-        self.chk_saveAddr.setText(_translate("frm_cus_checkout", "บันทึกที่อยู่"))
+        self.chk_saveAddr.setText(_translate("frm_cus_checkout", "บันทึกข้อมูลการจัดส่ง"))
         self.lbl_shipping.setText(_translate("frm_cus_checkout", "การจัดส่ง"))
         self.rdo_shipping1.setText(_translate("frm_cus_checkout", "ส่งด่วน"))
         self.rdo_shipping2.setText(_translate("frm_cus_checkout", "รับที่ร้าน"))

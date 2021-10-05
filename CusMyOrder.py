@@ -9,7 +9,7 @@
 from functools import partial
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtWidgets import QTableWidgetItem
+from PyQt5.QtWidgets import QTableWidgetItem, QMessageBox
 
 import CusUploadSlip
 from ucwblib import GetDatabase
@@ -17,9 +17,12 @@ from ucwblib import GetDatabase
 
 class Ui_frm_cus_myorder(object):
     def __init__(self, username=None):
-        self.username = username
+        # self.username = username
+        self.username = 'a'  # testing
         self.orders = None
         self.orders_count = 0
+        self.btn_view = list()
+        self.current_index = None
 
     def setupUi(self, frm_cus_myorder):
         frm_cus_myorder.setObjectName("frm_cus_myorder")
@@ -253,6 +256,13 @@ class Ui_frm_cus_myorder(object):
         QtCore.QMetaObject.connectSlotsByName(frm_cus_myorder)
 
         ###
+        self.btn_cancelChange.setEnabled(False)
+        self.btn_cancelOrder.setEnabled(False)
+        # self.btn_confirm.setEnabled(False)
+        self.btn_showQR.setEnabled(False)
+        self.btn_viewMore.setEnabled(False)
+        self.btn_back.setEnabled(False)
+
         self.getCusOrders()
         self.setupTable()
         self.addToTable()
@@ -260,6 +270,9 @@ class Ui_frm_cus_myorder(object):
 
         # Event-Driven
         self.btn_confirm.clicked.connect(self.confirmPayment)
+        self.btn_back.clicked.connect(self.backClicked)
+        self.btn_changeCus.clicked.connect(self.editCusInfo)
+        self.btn_cancelChange.clicked.connect(self.cancelEditCusInfo)
 
     def getCusOrders(self):
         with GetDatabase() as conn:
@@ -273,14 +286,11 @@ class Ui_frm_cus_myorder(object):
                 self.orders_count = found
 
     def getCusInfo(self):
-        self.txt_name.setReadOnly(True)
-        self.txt_tel.setReadOnly(True)
-        self.txt_email.setReadOnly(True)
-        self.txt_address.setReadOnly(True)
+        self.setCusInfoReadOnly(boolean=True)
         with GetDatabase() as conn:
             db = conn.get_database('ucwb')
             con = {'username': {"$regex": f'^{self.username}$',
-                                 "$options": "i"}}
+                                "$options": "i"}}
             # con2 = {'shipping_info': {'$exists': True,
             #                           '$ne': None}}
             # where = {'$and': [con1, con2]}
@@ -323,19 +333,20 @@ class Ui_frm_cus_myorder(object):
 
     def addToTable(self):
         try:
-            btn_view = list()
             for i, v in enumerate(self.orders):
                 oid = v['oid']
                 date = v['date']
                 total = 0
                 for item in v['cart']:
                     total += item['price'] * item['qty']
+                coupon = self.getCouponValue(v['coupon'])
+                total -= coupon
                 status = v['status']
 
                 # Button สำหรับเลือก Order
-                btn_view.append(QtWidgets.QPushButton("ดู"))
-                btn_view[i].clicked.connect(partial(self.getSelectedOrder, oid))
-                self.tbl_order.setCellWidget(i, 0, btn_view[i])
+                self.btn_view.append(QtWidgets.QPushButton("ดู"))
+                self.btn_view[i].clicked.connect(partial(self.getSelectedOrder, i, oid))
+                self.tbl_order.setCellWidget(i, 0, self.btn_view[i])
 
                 self.tbl_order.setItem(i, 1, QTableWidgetItem("{}".format(oid)))
 
@@ -350,16 +361,115 @@ class Ui_frm_cus_myorder(object):
         except TypeError:
             pass
 
-    def getSelectedOrder(self, i):
-        print("Order ID = {}".format(i))
+        finally:
+            self.tbl_order.resizeRowsToContents()
+
+    def getCouponValue(self, code):
+        value = 0
+        with GetDatabase() as conn:
+            db = conn.get_database('ucwb')
+            con = {'code': code}
+            found = db.coupons.count_documents(con)
+            if found:
+                cursor = db.coupons.find(con)
+                value = cursor[0]['value']
+        return value
+
+    def getSelectedOrder(self, i, oid):
+        self.current_index = i
+        self.btn_view[i].setEnabled(False)
+        self.setOrderBtnEnabled(True)
+        # print("Order ID = {}".format(oid))
+        self.lbl_orderId.setText("Order ID :\n{}".format(oid))
+        self.lbl_order_list.setText("ข้อมูลคำสั่งซื้อ")
+        self.lbl_cus_detail.setText("ข้อมูลในการจัดส่ง")
+        self.txt_email.setDisabled(True)
+
+    def backClicked(self):
+        self.btn_view[self.current_index].setEnabled(True)
+        self.setOrderBtnEnabled(False)
+        self.current_index = None
+        self.lbl_orderId.setText("Order ID :\n")
+        self.lbl_order_list.setText("รายการคำสั่งซื้อ")
+        self.lbl_cus_detail.setText("ข้อมูลลูกค้า")
+        self.txt_email.setDisabled(False)
 
     def confirmPayment(self):
-        # CusUploadSlip.frm_cus_uploadslip.exec_()
-        frm_cus_uploadslip = QtWidgets.QDialog()
-        _ui = CusUploadSlip.Ui_frm_cus_uploadslip(username=self.username)
-        _ui.setupUi(frm_cus_uploadslip)
-        CusUploadSlip.frm_cus_uploadslip = frm_cus_uploadslip
-        frm_cus_uploadslip.exec_()
+        if self.current_index is not None:
+            # CusUploadSlip.frm_cus_uploadslip.exec_()
+            frm_cus_uploadslip = QtWidgets.QDialog()
+            _ui = CusUploadSlip.Ui_frm_cus_uploadslip(username=self.username)
+            _ui.setupUi(frm_cus_uploadslip)
+            CusUploadSlip.frm_cus_uploadslip = frm_cus_uploadslip
+            frm_cus_uploadslip.exec_()
+        else:
+            msg = QMessageBox()
+            msg.setWindowTitle("My Orders")
+            msg.setIcon(QMessageBox.Warning)
+            msg.setText("กรุณาคลิกเลือกดูรายการคำสั่งซื้อก่อน")
+            msg.exec_()
+
+    def editCusInfo(self):
+        if self.btn_changeCus.text() == "แก้ไขข้อมูล":
+            self.btn_changeCus.setText("ยืนยัน")
+            self.btn_cancelChange.setEnabled(True)
+            self.setCusInfoReadOnly(boolean=False)
+            self.temp_cusInfo = (self.txt_name.text(),
+                                 self.txt_tel.text(),
+                                 self.txt_email.text(),
+                                 self.txt_address.toPlainText())
+        else:
+            self.saveCusInfo()
+            self.btn_changeCus.setText("แก้ไขข้อมูล")
+            self.btn_cancelChange.setEnabled(False)
+            self.setCusInfoReadOnly(boolean=True)
+            self.temp_cusInfo = tuple()
+
+    def cancelEditCusInfo(self):
+        self.btn_cancelChange.setEnabled(False)
+        self.btn_changeCus.setText("แก้ไขข้อมูล")
+
+        self.setCusInfoReadOnly(boolean=True)
+        self.txt_name.setText(self.temp_cusInfo[0])
+        self.txt_tel.setText(self.temp_cusInfo[1])
+        self.txt_email.setText(self.temp_cusInfo[2])
+        self.txt_address.setText(self.temp_cusInfo[3])
+
+    def saveCusInfo(self):
+        name = self.txt_name.text()
+        tel = self.txt_tel.text()
+        email = self.txt_email.text()
+        address = self.txt_address.toPlainText()
+        msg = QMessageBox()
+        msg.setWindowTitle("บันทึกข้อมูลลูกค้า")
+        with GetDatabase() as conn:
+            db = conn.get_database('ucwb')
+            con = {'username': {"$regex": f'^{self.username}$', "$options": "i"}}
+            found = db.users.count_documents(con)
+            if found:
+                setTo = {'$set': {'email': email,
+                                  'shipping_info': {'name': name,
+                                                    'tel': tel,
+                                                    'address': address}}}
+                db.users.update_one(con, setTo)
+                msg.setIcon(QMessageBox.Information)
+                msg.setText("บันทึกข้อมูลลูกค้าสำเร็จ!")
+            else:
+                msg.setIcon(QMessageBox.Critical)
+                msg.setText("Error: Cannot save shipping info\nPlease login again...")
+            msg.exec_()
+
+    def setOrderBtnEnabled(self, boolean=True):
+        self.btn_back.setEnabled(boolean)
+        self.btn_viewMore.setEnabled(boolean)
+        self.btn_cancelOrder.setEnabled(boolean)
+        self.btn_showQR.setEnabled(boolean)
+
+    def setCusInfoReadOnly(self, boolean=True):
+        self.txt_name.setReadOnly(boolean)
+        self.txt_tel.setReadOnly(boolean)
+        self.txt_email.setReadOnly(boolean)
+        self.txt_address.setReadOnly(boolean)
 
     def retranslateUi(self, frm_cus_myorder):
         _translate = QtCore.QCoreApplication.translate
@@ -388,7 +498,7 @@ class Ui_frm_cus_myorder(object):
         self.btn_showQR.setText(_translate("frm_cus_myorder", "แสดง QR Code"))
         self.btn_cancelOrder.setText(_translate("frm_cus_myorder", "ยกเลิกคำสั่งซื้อ"))
         self.btn_viewMore.setText(_translate("frm_cus_myorder", "ข้อมูลการจัดส่ง"))
-        self.lbl_orderId.setText(_translate("frm_cus_myorder", "Order ID : "))
+        self.lbl_orderId.setText(_translate("frm_cus_myorder", "Order ID :\n"))
 
 
 frm_cus_myorder = None

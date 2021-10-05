@@ -381,6 +381,8 @@ class Ui_frm_cus_main(object):
         if not same_page:
             self.setCombobox(brands, keywords)
 
+        self.tbl_item.resizeRowsToContents()
+
     def searchProducts(self, cat='101'):
         search_txt = self.txt_search.text()
         brand = str(self.cmb_brand.currentText())
