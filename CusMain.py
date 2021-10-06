@@ -24,7 +24,7 @@ USERNAME = "{username}"
 
 class Ui_frm_cus_main(object):
 
-    def __init__(self, username=USERNAME):
+    def __init__(self, username: str = USERNAME):
         self.username = username
         self.cat_selected = [{}, {}, {}, {}, {}, {}, {}, {}, {}, {}]
         self.cat_total = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]

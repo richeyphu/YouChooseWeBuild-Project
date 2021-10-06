@@ -12,16 +12,17 @@ from PyQt5.QtWidgets import QMessageBox, QTableWidgetItem
 from datetime import datetime
 
 import CusPayment
-from ucwblib import GetDatabase
+from ucwblib import GetDatabase, getSettings
 
 
 class Ui_frm_cus_checkout(object):
 
-    def __init__(self, cart={}, username=None):
-        self.tax_rate = 0
-        self.discount = 0
+    def __init__(self, cart: dict = {}, username: str = None):
         self.username = username
         self.cart = cart
+        self.shipping_fee = 0
+        self.tax_rate = 0
+        self.discount = 0
         self.code = ""
 
     def setupUi(self, frm_cus_checkout):
@@ -264,19 +265,22 @@ class Ui_frm_cus_checkout(object):
     def showTable(self):
         # with pymongo.MongoClient(CONN_STR) as conn:
 
-        with GetDatabase() as conn:
-            db = conn.get_database('ucwb')
+        # with GetDatabase() as conn:
+        #     db = conn.get_database('ucwb')
+        #
+        #     condition = {'name': 'shipping_fee'}
+        #     cursor = db.settings.find(condition)
+        #     self.shipping_fee = cursor[0]['value']
+        #
+        #     condition = {'name': 'tax_rate'}
+        #     cursor = db.settings.find(condition)
+        #     self.tax_rate = cursor[0]['value']
+        settings = getSettings()
+        self.shipping_fee = settings['shipping_fee']
+        self.tax_rate = settings['tax_rate']
 
-            condition = {'name': 'shipping_fee'}
-            cursor = db.settings.find(condition)
-            self.shipping_fee = cursor[0]['value']
-
-            condition = {'name': 'tax_rate'}
-            cursor = db.settings.find(condition)
-            self.tax_rate = cursor[0]['value']
-
-            # สร้างตาราง
-            self.addToTable(self.cart)
+        # สร้างตาราง
+        self.addToTable(self.cart)
 
     def addToTable(self, cart):
         num_row = len(cart) + 3
@@ -304,20 +308,20 @@ class Ui_frm_cus_checkout(object):
         self.net_total += vat
         self.tbl_cart.setItem(num_row - 3, 0, QTableWidgetItem("ภาษี ({:g}%)".format(self.tax_rate)))
         item_shipping = QTableWidgetItem("{:,.2f}".format(vat))
-        item_shipping.setTextAlignment(QtCore.Qt.AlignRight)
+        item_shipping.setTextAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
         self.tbl_cart.setItem(num_row - 3, 3, item_shipping)
         # ค่าจัดส่ง
         shipping_fee = self.shipping_fee if self.rdo_shipping1.isChecked() else 0
         self.net_total += shipping_fee
         self.tbl_cart.setItem(num_row - 2, 0, QTableWidgetItem("ค่าจัดส่ง"))
         item_shipping = QTableWidgetItem("{:,.2f}".format(shipping_fee))
-        item_shipping.setTextAlignment(QtCore.Qt.AlignRight)
+        item_shipping.setTextAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
         self.tbl_cart.setItem(num_row - 2, 3, item_shipping)
         # คูปองส่วนลด
         self.net_total -= self.discount if self.discount <= self.net_total else 0
         self.tbl_cart.setItem(num_row - 1, 0, QTableWidgetItem("ส่วนลด"))
         item_shipping = QTableWidgetItem("-{:,.2f}".format(self.discount))
-        item_shipping.setTextAlignment(QtCore.Qt.AlignRight)
+        item_shipping.setTextAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
         self.tbl_cart.setItem(num_row - 1, 3, item_shipping)
         # Display 'net_total'
         self.lbl_total.setText("ราคาสุทธิ {:,.2f} บาท".format(self.net_total))
@@ -358,6 +362,9 @@ class Ui_frm_cus_checkout(object):
         self.tbl_cart.setHorizontalHeaderItem(3, header4)
 
         # ตั้งค่าความกว้าง column
+        self.tbl_cart.horizontalHeader().setSectionResizeMode(0, QtWidgets.QHeaderView.Interactive)
+        self.tbl_cart.horizontalHeader().setStretchLastSection(True)
+        # self.tbl_cart.horizontalHeader().setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
         self.tbl_cart.setColumnWidth(0, 220)
         self.tbl_cart.setColumnWidth(1, 90)
         self.tbl_cart.setColumnWidth(2, 50)
@@ -468,7 +475,7 @@ class Ui_frm_cus_checkout(object):
         name = self.txt_name.text()
         tel = self.txt_tel.text()
         address = self.txt_address.toPlainText()
-        coupon = self.txt_coupon.text()
+        coupon = self.txt_coupon.text().upper()
         with GetDatabase() as conn:
             db = conn.get_database('ucwb')
             count = db.orders.count_documents({})

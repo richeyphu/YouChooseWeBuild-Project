@@ -12,17 +12,22 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QTableWidgetItem, QMessageBox
 
 import CusUploadSlip
-from ucwblib import GetDatabase
+from ucwblib import GetDatabase, getSettings
+
+ORDER_STATUS = {'0': 'รอการชำระเงิน',
+                '1': 'รอแจ้งชำระเงิน'}
 
 
 class Ui_frm_cus_myorder(object):
-    def __init__(self, username=None):
+    def __init__(self, username: str = None):
         # self.username = username
         self.username = 'a'  # testing
         self.orders = None
         self.orders_count = 0
         self.btn_view = list()
         self.current_index = None
+        self.tax_rate = 0
+        self.shipping_fee = 0
 
     def setupUi(self, frm_cus_myorder):
         frm_cus_myorder.setObjectName("frm_cus_myorder")
@@ -263,6 +268,7 @@ class Ui_frm_cus_myorder(object):
         self.btn_viewMore.setEnabled(False)
         self.btn_back.setEnabled(False)
 
+        self.getPriceSettings()
         self.getCusOrders()
         self.setupTable()
         self.addToTable()
@@ -282,7 +288,7 @@ class Ui_frm_cus_myorder(object):
             found = db.orders.count_documents(con)
             if found:
                 cursor = db.orders.find(con)
-                self.orders = cursor
+                self.orders = list(cursor)
                 self.orders_count = found
 
     def getCusInfo(self):
@@ -307,6 +313,7 @@ class Ui_frm_cus_myorder(object):
     def setupTable(self):
         # Table Widget
         self.tbl_order.setRowCount(0)  # Reset table
+        self.tbl_order.setColumnCount(0)  # Reset table
         self.tbl_order.setRowCount(self.orders_count)
         self.tbl_order.setColumnCount(5)
         self.tbl_order.setEditTriggers(QtWidgets.QTableWidget.NoEditTriggers)  # Table Read-only
@@ -326,26 +333,40 @@ class Ui_frm_cus_myorder(object):
         self.tbl_order.setHorizontalHeaderItem(4, header4)
 
         # ตั้งค่าความกว้าง column
+        self.tbl_order.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Interactive)
+        self.tbl_order.horizontalHeader().setSectionResizeMode(0)
         self.tbl_order.setColumnWidth(0, 30)
-        # self.tbl_order.setColumnWidth(1, 90)
-        # self.tbl_order.setColumnWidth(2, 50)
-        # self.tbl_order.setColumnWidth(4, 60)
+        self.tbl_order.setColumnWidth(1, 100)
+        self.tbl_order.setColumnWidth(2, 90)
+        # self.tbl_order.setColumnWidth(4, 135)
+        self.tbl_order.horizontalHeader().setSectionResizeMode(4, QtWidgets.QHeaderView.Stretch)
 
     def addToTable(self):
+        self.btn_view = list()
         try:
             for i, v in enumerate(self.orders):
                 oid = v['oid']
                 date = v['date']
+                # Net Total
                 total = 0
                 for item in v['cart']:
                     total += item['price'] * item['qty']
-                coupon = self.getCouponValue(v['coupon'])
-                total -= coupon
-                status = v['status']
+                # ภาษีมูลค่าเพิ่ม
+                vat = total * self.tax_rate / 100
+                total += vat
+                # ค่าจัดส่ง
+                if v['shipping_info']['shipping']:
+                    total += self.shipping_fee
+                # คูปองส่วนลด
+                discount = 0 if v['coupon'] == "" else self.getCouponValue(v['coupon'])
+                total -= discount
+                # สถานะ order
+                status = ORDER_STATUS["{}".format(v['status'])]
 
                 # Button สำหรับเลือก Order
                 self.btn_view.append(QtWidgets.QPushButton("ดู"))
-                self.btn_view[i].clicked.connect(partial(self.getSelectedOrder, i, oid))
+                order_info = (v['cart'], v['shipping_info'], discount)
+                self.btn_view[i].clicked.connect(partial(self.getSelectedOrder, i, oid, order_info))
                 self.tbl_order.setCellWidget(i, 0, self.btn_view[i])
 
                 self.tbl_order.setItem(i, 1, QTableWidgetItem("{}".format(oid)))
@@ -356,7 +377,9 @@ class Ui_frm_cus_myorder(object):
                 item_price.setTextAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
                 self.tbl_order.setItem(i, 3, item_price)
 
-                self.tbl_order.setItem(i, 4, QTableWidgetItem("{}".format(status)))
+                item_status = QTableWidgetItem("{}".format(status))
+                item_status.setTextAlignment(QtCore.Qt.AlignCenter | QtCore.Qt.AlignVCenter)
+                self.tbl_order.setItem(i, 4, item_status)
 
         except TypeError:
             pass
@@ -364,18 +387,23 @@ class Ui_frm_cus_myorder(object):
         finally:
             self.tbl_order.resizeRowsToContents()
 
-    def getCouponValue(self, code):
+    def getCouponValue(self, code: str):
         value = 0
         with GetDatabase() as conn:
             db = conn.get_database('ucwb')
-            con = {'code': code}
+            con = {'code': code.upper()}
             found = db.coupons.count_documents(con)
             if found:
                 cursor = db.coupons.find(con)
                 value = cursor[0]['value']
         return value
 
-    def getSelectedOrder(self, i, oid):
+    def getPriceSettings(self):
+        settings = getSettings()
+        self.shipping_fee = settings['shipping_fee']
+        self.tax_rate = settings['tax_rate']
+
+    def getSelectedOrder(self, i, oid, data):
         self.current_index = i
         self.btn_view[i].setEnabled(False)
         self.setOrderBtnEnabled(True)
@@ -384,15 +412,110 @@ class Ui_frm_cus_myorder(object):
         self.lbl_order_list.setText("ข้อมูลคำสั่งซื้อ")
         self.lbl_cus_detail.setText("ข้อมูลในการจัดส่ง")
         self.txt_email.setDisabled(True)
+        try:
+            self.showOrderDetailTable(data)
+        except Exception as e:
+            print(e)
+
+    def showOrderDetailTable(self, data):
+        cart = data[0]
+        shipping = data[1]['shipping']
+        discount = data[2]
+
+        num_row = len(cart) + 4
+        self.setupOrderDetailTable(num_row)
+
+        net_total = 0
+        for i, v in enumerate(cart):
+            price = v['price']
+            qty = v['qty']
+            total = price * qty
+            net_total += total
+
+            self.tbl_order.setItem(i, 0, QTableWidgetItem("{}".format(v['name'])))
+            item_price = QTableWidgetItem("{:,.2f}".format(price))
+            item_price.setTextAlignment(QtCore.Qt.AlignRight)
+            self.tbl_order.setItem(i, 1, item_price)
+            item_qty = QTableWidgetItem("{}".format(qty))
+            item_qty.setTextAlignment(QtCore.Qt.AlignRight)
+            self.tbl_order.setItem(i, 2, item_qty)
+            item_total = QTableWidgetItem("{:,.2f}".format(total))
+            item_total.setTextAlignment(QtCore.Qt.AlignRight)
+            self.tbl_order.setItem(i, 3, item_total)
+        # ภาษีมูลค่าเพิ่ม
+        vat = net_total * self.tax_rate / 100
+        net_total += vat
+        self.tbl_order.setItem(num_row - 4, 0, QTableWidgetItem("ภาษี ({:g}%)".format(self.tax_rate)))
+        item_shipping = QTableWidgetItem("{:,.2f}".format(vat))
+        item_shipping.setTextAlignment(QtCore.Qt.AlignRight)
+        self.tbl_order.setItem(num_row - 4, 3, item_shipping)
+        # ค่าจัดส่ง
+        shipping_fee = self.shipping_fee if shipping else 0
+        net_total += shipping_fee
+        self.tbl_order.setItem(num_row - 3, 0, QTableWidgetItem("ค่าจัดส่ง"))
+        item_shipping = QTableWidgetItem("{:,.2f}".format(shipping_fee))
+        item_shipping.setTextAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
+        self.tbl_order.setItem(num_row - 3, 3, item_shipping)
+        # คูปองส่วนลด
+        net_total -= discount if discount <= net_total else 0
+        self.tbl_order.setItem(num_row - 2, 0, QTableWidgetItem("ส่วนลด"))
+        item_shipping = QTableWidgetItem("-{:,.2f}".format(discount))
+        item_shipping.setTextAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
+        self.tbl_order.setItem(num_row - 2, 3, item_shipping)
+        # Display 'net_total'
+        font = QtGui.QFont()
+        font.setBold(True)
+        self.tbl_order.setItem(num_row - 1, 0, QTableWidgetItem("ราคาสุทธิ"))
+        self.tbl_order.item(num_row - 1, 0).setFont(font)
+        item_net_total = QTableWidgetItem("{:,.2f}".format(net_total))
+        item_net_total.setTextAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
+        item_net_total.setFont(font)
+        self.tbl_order.setItem(num_row - 1, 3, item_net_total)
+
+    def setupOrderDetailTable(self, num_row):
+        # Table Widget
+        self.tbl_order.setRowCount(0)  # Reset table
+        self.tbl_order.setColumnCount(0)  # Reset table
+        self.tbl_order.setRowCount(num_row)
+        self.tbl_order.setColumnCount(4)
+        self.tbl_order.setEditTriggers(QtWidgets.QTableWidget.NoEditTriggers)  # Table Read-only
+
+        # สร้าง Header
+        header1 = QtWidgets.QTableWidgetItem("รายการ")
+        header2 = QtWidgets.QTableWidgetItem("ราคา/หน่วย")
+        header3 = QtWidgets.QTableWidgetItem("จำนวน")
+        header4 = QtWidgets.QTableWidgetItem("รวม")
+
+        # ใส่ Header ให้ Table
+        self.tbl_order.setHorizontalHeaderItem(0, header1)
+        self.tbl_order.setHorizontalHeaderItem(1, header2)
+        self.tbl_order.setHorizontalHeaderItem(2, header3)
+        self.tbl_order.setHorizontalHeaderItem(3, header4)
+
+        # ตั้งค่าความกว้าง column
+        self.tbl_order.horizontalHeader().setSectionResizeMode(0, QtWidgets.QHeaderView.Interactive)
+        self.tbl_order.horizontalHeader().setStretchLastSection(True)
+        # self.tbl_order.horizontalHeader().setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
+        self.tbl_order.setColumnWidth(0, 220)
+        self.tbl_order.setColumnWidth(1, 90)
+        self.tbl_order.setColumnWidth(2, 50)
+        self.tbl_order.setColumnWidth(4, 60)
 
     def backClicked(self):
-        self.btn_view[self.current_index].setEnabled(True)
+        # self.btn_view[self.current_index].setEnabled(True)
         self.setOrderBtnEnabled(False)
         self.current_index = None
         self.lbl_orderId.setText("Order ID :\n")
         self.lbl_order_list.setText("รายการคำสั่งซื้อ")
         self.lbl_cus_detail.setText("ข้อมูลลูกค้า")
         self.txt_email.setDisabled(False)
+        # Load orders table
+        try:
+            # self.getCusOrders()
+            self.setupTable()
+            self.addToTable()
+        except Exception as e:
+            print(e)
 
     def confirmPayment(self):
         if self.current_index is not None:
