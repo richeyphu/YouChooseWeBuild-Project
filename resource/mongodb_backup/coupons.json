@@ -1,0 +1,17 @@
+[{
+  "_id": {
+    "$oid": "6142e66d57e8efd8d2cd8e39"
+  },
+  "name": "100 Baht Discount",
+  "code": "SALE100",
+  "value": 100,
+  "status": true
+},{
+  "_id": {
+    "$oid": "6158cd236340e4aa52aa633e"
+  },
+  "name": "50 Baht Discount",
+  "code": "SALE50",
+  "value": 50,
+  "status": true
+}]

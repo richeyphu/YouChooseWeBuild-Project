@@ -1,0 +1,104 @@
+[{
+  "_id": {
+    "$oid": "613c89d4b2e1e4f2e3b39526"
+  },
+  "username": "test",
+  "password": {
+    "$binary": {
+      "base64": "0y9ecqaVsPcf7P+3le2pbOaC3y6wL5NV4jPJF28+fNp+hJxtdzegjlsfGB88J4ZwnrFy4rIYiOt18f5utzPibw==",
+      "subType": "00"
+    }
+  },
+  "name": "Test Test",
+  "tel": "test",
+  "email": "test",
+  "joined_date": {
+    "$date": "2021-09-11T17:49:56.792Z"
+  },
+  "last_access": {
+    "$date": "2021-09-11T17:49:56.792Z"
+  }
+},{
+  "_id": {
+    "$oid": "613c89719dfbb61a49162678"
+  },
+  "username": "a",
+  "password": {
+    "$binary": {
+      "base64": "wqLulTdU3RJVkjZW0H8danHzEvKc/Sx60jpQYxE2U+B4giEqCaBwxxzL48raA1rc4NzJlIzwCUOStVShBz4Ikw==",
+      "subType": "00"
+    }
+  },
+  "name": "A",
+  "tel": "a",
+  "email": "a@a.com",
+  "joined_date": {
+    "$date": "2021-09-11T17:48:17.596Z"
+  },
+  "last_access": {
+    "$date": "2021-10-05T17:56:57.211Z"
+  },
+  "shipping_info": {
+    "name": "ทดสอบ คุง",
+    "tel": "0899999999",
+    "address": "999 ถนน แขวง เขต กทม 10110"
+  }
+},{
+  "_id": {
+    "$oid": "613c894750cc8916a584d094"
+  },
+  "username": "cus1",
+  "password": {
+    "$binary": {
+      "base64": "ix2L0oa1ZE6BfdsxoUuKbD7opOAw8HkUIjyKCrtI/JHCFXP94iP2yQAWuZvBYbZiv5Y4+Y+Ml7ekqVOOJXXGXA==",
+      "subType": "00"
+    }
+  },
+  "name": "First customer",
+  "tel": "0811111111",
+  "email": "cus1@mail.com",
+  "joined_date": {
+    "$date": "2021-09-11T17:47:35.990Z"
+  },
+  "last_access": {
+    "$date": "2021-09-11T17:47:35.990Z"
+  }
+},{
+  "_id": {
+    "$oid": "613c88b8cf30744b3d632c18"
+  },
+  "username": "admin",
+  "password": {
+    "$binary": {
+      "base64": "EwoaZhGdx39m2hlYgw3XDaSJBbZWGlbpLJAOiyEFcHnlpTmBJZpp+jf1YQJI8Y+Fyr0gbk06hGeqBWbOtqJ1vQ==",
+      "subType": "00"
+    }
+  },
+  "name": "Administrator",
+  "joined_date": {
+    "$date": "2021-09-11T17:45:12.174Z"
+  },
+  "last_access": {
+    "$date": "2021-09-11T17:45:12.174Z"
+  }
+},{
+  "_id": {
+    "$oid": "61598c0f706e8da9316e2f6d"
+  },
+  "username": "b",
+  "password": {
+    "$binary": {
+      "base64": "8gjnNSu4z4RE65GWWVNYhnHNLzKjEoo/o2rdTj5B0Ol572G7Wi582L6moG3bkbUUzyuvfkMabVZWyM5K+x+Pcw==",
+      "subType": "00"
+    }
+  },
+  "name": "B",
+  "tel": "b",
+  "email": "b",
+  "joined_date": {
+    "$date": "2021-10-03T17:55:11.554Z"
+  },
+  "last_access": {
+    "$date": "2021-10-03T18:00:46.600Z"
+  }
+}]
