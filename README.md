@@ -7,7 +7,7 @@
 <img src="resource/logo/ucwb-logo1.png" alt="My Warehouse Logo" style="max-width: 100%; height: auto;">
 </div>
 
-**You Choose, We Build (UCWB)** is a computer builder and shop manager software system, developed in Python language.
+**You Choose, We Build (UCWB)** is a computer builder and shop manager software system, developed in Python language with cloud database, MongoDB Atlas.
 
 > ***ITE-418 Final Project (Python 1/2564)***
 
