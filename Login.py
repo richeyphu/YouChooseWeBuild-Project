@@ -9,11 +9,11 @@
 from datetime import datetime
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtWidgets import QMessageBox
+# from PyQt5.QtWidgets import QMessageBox
 
 import Register
 import CusMain
-from ucwblib import GetDatabase, HashPassword
+from ucwblib import GetDatabase, HashPassword, ICON_PATH, QMessageBox
 
 
 class Ui_frm_login(object):
@@ -24,6 +24,9 @@ class Ui_frm_login(object):
         frm_login.setMaximumSize(QtCore.QSize(500, 350))
 
         frm_login.setWindowFlag(QtCore.Qt.WindowMinimizeButtonHint)
+
+        # Set window icon
+        frm_login.setWindowIcon(QtGui.QIcon(ICON_PATH))
 
         self.formLayoutWidget = QtWidgets.QWidget(frm_login)
         self.formLayoutWidget.setGeometry(QtCore.QRect(90, 110, 321, 71))

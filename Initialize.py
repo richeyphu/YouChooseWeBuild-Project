@@ -15,6 +15,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QDesktopWidget
 
 import Login
+from ucwblib import ICON_PATH
 
 
 class Ui_frm_splash(object):
@@ -33,6 +34,9 @@ class Ui_frm_splash(object):
         centerPoint = QDesktopWidget().availableGeometry().center()
         qtRectangle.moveCenter(centerPoint)
         frm_splash.move(qtRectangle.topLeft())
+
+        # Set window icon
+        frm_splash.setWindowIcon(QtGui.QIcon(ICON_PATH))
 
         self.frame_header = QtWidgets.QFrame(frm_splash)
         self.frame_header.setGeometry(QtCore.QRect(0, 0, 521, 415))

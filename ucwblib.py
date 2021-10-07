@@ -1,14 +1,27 @@
 # Welcome to YouChooseWeBuild-Project's Library
 # Created by Phurit D.
 
-from pymongo import MongoClient
+import ssl
+import certifi
+from PyQt5 import QtWidgets, QtGui
 
+from pymongo import MongoClient, errors as mongoError
 from hashlib import pbkdf2_hmac
 from os import urandom
 
+ICON_PATH = "resource/logo/icon.ico"
+ICON_ADMIN_PATH = "resource/logo/icon_admin.ico"
+
 # CONNECTION_STRING = "mongodb+srv://<...>"
-# CONNECTION_STRING = "mongodb+srv://admin:NOCvZLbzSxi8IsCB@cluster0.cc3d8.mongodb.net/myShop?retryWrites=true&w=majority"
-CONNECTION_STRING = "mongodb+srv://tni:zfqN44SoOI7dBwSm@cluster0.cc3d8.mongodb.net/myShop?retryWrites=true&w=majority"
+# CONNECTION_STRING = "mongodb+srv://admin:NOCvZLbzSxi8IsCB@cluster0.cc3d8.mongodb.net/ucwb?retryWrites=true&w=majority"
+# CONNECTION_STRING = "mongodb+srv://tni:zfqN44SoOI7dBwSm@cluster0.cc3d8.mongodb.net/ucwb?retryWrites=true&w=majority"
+CONNECTION_STRING = "mongodb+srv://tni_ucwb:fw17taFaN798hbGE@cluster0.cc3d8.mongodb.net/ucwb?retryWrites=true&w=majority"
+
+ORDER_STATUS = {'-1': 'ยกเลิกแล้ว',
+                '0': 'รอการชำระเงิน',
+                '1': 'รอแจ้งชำระเงิน',
+                '2': 'รอการจัดส่ง',
+                '3': 'จัดส่งแล้ว'}
 
 
 # Connect to cloud database
@@ -16,10 +29,23 @@ class GetDatabase(object):
 
     def __init__(self, conn_str=CONNECTION_STRING):
         self.conn_str = conn_str
+        self.client = None
 
     def __enter__(self):
         self.client = MongoClient(self.conn_str)
+        # self.client = MongoClient(self.conn_str, tlsCAFile=certifi.where())  # In case of SSL error
+        # self.testConn()
         return self.client
+
+    # In case of [SSL: CERTIFICATE_VERIFY_FAILED]
+    def testConn(self):
+        try:
+            db = self.client.get_database('ucwb')
+            db.settings.count_documents({})
+        except mongoError.ServerSelectionTimeoutError as e:
+            print("ServerSelectionTimeoutError: {}".format(e))
+            self.client = MongoClient(self.conn_str, tlsCAFile=certifi.where())  # for Windows
+            # self.client = MongoClient(self.conn_str, ssl_cert_reqs=ssl.CERT_NONE)  # Secondary
 
     def __exit__(self, *args):
         self.client.close()
@@ -60,3 +86,51 @@ class HashPassword:
             chunk = self.password
         key_from_chunk = chunk[32:]
         return key_from_chunk
+
+
+class QMessageBox(QtWidgets.QMessageBox):
+    def __init__(self):
+        super().__init__()
+        self.setWindowIcon(QtGui.QIcon(ICON_PATH))
+
+
+class AdminQMessageBox(QtWidgets.QMessageBox):
+    def __init__(self):
+        super().__init__()
+        self.setWindowIcon(QtGui.QIcon(ICON_ADMIN_PATH))
+
+
+def getSettings():
+    settings = dict()
+
+    with GetDatabase() as conn:
+        db = conn.get_database('ucwb')
+        # condition = {'name': 'shipping_fee'}
+        # condition = {'name': 'tax_rate'}
+        cursor = db.settings.find({})
+        settings['shipping_fee'] = cursor[0]['value']
+        settings['tax_rate'] = cursor[1]['value']
+        settings['payment_detail'] = cursor[2]['value']
+
+    return settings
+
+
+def getCouponValue(code: str):
+    value = 0
+    with GetDatabase() as conn:
+        db = conn.get_database('ucwb')
+        con = {'code': code.upper()}
+        found = db.coupons.count_documents(con)
+        if found:
+            cursor = db.coupons.find(con)
+            value = cursor[0]['value']
+    return value
+
+
+def getOrderStatus(code):
+    code = str(code)
+    try:
+        status = ORDER_STATUS[code]
+    except KeyError:
+        status = "N/A"
+    return status

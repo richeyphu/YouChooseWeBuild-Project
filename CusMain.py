@@ -13,9 +13,9 @@ import pymongo
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import QLocale
-from PyQt5.QtWidgets import QTableWidgetItem, QMessageBox
+from PyQt5.QtWidgets import QTableWidgetItem
 
-from ucwblib import GetDatabase
+from ucwblib import GetDatabase, ICON_PATH, QMessageBox
 import CusCheckout
 import CusMyOrder
 
@@ -37,6 +37,10 @@ class Ui_frm_cus_main(object):
         frm_cus_main.setMinimumSize(QtCore.QSize(1080, 720))
         frm_cus_main.setMaximumSize(QtCore.QSize(1080, 720))
         frm_cus_main.setStyleSheet("")
+
+        # Set window icon
+        frm_cus_main.setWindowIcon(QtGui.QIcon(ICON_PATH))
+
         self.centralwidget = QtWidgets.QWidget(frm_cus_main)
         self.centralwidget.setObjectName("centralwidget")
         self.frame_item = QtWidgets.QFrame(self.centralwidget)

@@ -9,9 +9,9 @@
 from datetime import datetime
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtWidgets import QMessageBox
+# from PyQt5.QtWidgets import QMessageBox
 
-from ucwblib import GetDatabase, HashPassword
+from ucwblib import GetDatabase, HashPassword, ICON_PATH, QMessageBox
 
 
 class Ui_frm_register(object):
@@ -22,6 +22,9 @@ class Ui_frm_register(object):
         frm_register.setMaximumSize(QtCore.QSize(500, 450))
 
         frm_register.setWindowFlag(QtCore.Qt.WindowMinimizeButtonHint)
+
+        # Set window icon
+        frm_register.setWindowIcon(QtGui.QIcon(ICON_PATH))
 
         self.formLayoutWidget = QtWidgets.QWidget(frm_register)
         self.formLayoutWidget.setGeometry(QtCore.QRect(50, 100, 381, 221))
@@ -188,7 +191,7 @@ class Ui_frm_register(object):
                 hashed_pwd = HashPassword(password)
                 # with pymongo.MongoClient(CONN_STR) as conn:
                 with GetDatabase() as conn:
-                    db = conn.get_database('myShop')
+                    db = conn.get_database('ucwb')
                     db.users.insert_one({'username': username,
                                          'password': hashed_pwd.getSaltAndHashChunk(),
                                          'name': name,
@@ -216,7 +219,7 @@ class Ui_frm_register(object):
             return False
         # with pymongo.MongoClient(CONN_STR) as conn:
         with GetDatabase() as conn:
-            db = conn.get_database('myShop')
+            db = conn.get_database('ucwb')
             condition = {'username': {"$regex": f'^{username}$', "$options": "i"}}
             found = db.users.count_documents(condition)
             if found:

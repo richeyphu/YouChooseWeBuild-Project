@@ -12,8 +12,14 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtGui import QPixmap
 from pypromptpay import qr_code
 
+from ucwblib import GetDatabase, ICON_PATH
+
 
 class Ui_frm_cus_payment(object):
+
+    def __init__(self, amount=0):
+        self.amount = amount
+
     def setupUi(self, frm_cus_payment):
         frm_cus_payment.setObjectName("frm_cus_payment")
         frm_cus_payment.resize(375, 480)
@@ -22,6 +28,9 @@ class Ui_frm_cus_payment(object):
 
         frm_cus_payment.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
         # frm_cus_payment.setFixedSize(QtCore.QSize(900, 600))
+
+        # Set window icon
+        frm_cus_payment.setWindowIcon(QtGui.QIcon(ICON_PATH))
 
         self.lbl_qrcode = QtWidgets.QLabel(frm_cus_payment)
         self.lbl_qrcode.setGeometry(QtCore.QRect(90, 100, 200, 200))
@@ -119,25 +128,32 @@ class Ui_frm_cus_payment(object):
         # self.btn_cancel.clicked.connect(self.cancel)
 
     def loadQR(self):
-        acc_name = "ภูริช เดชะบุญศิริพานิช"
-        acc_no = "080-916-7238"
-        amount = 1.0
+        with GetDatabase() as conn:
+            db = conn.get_database('ucwb')
+            condition = {'name': 'payment_detail'}
+            cursor = db.settings.find(condition)
 
-        # self.lbl_accno.setText(acc_no)
-        self.lbl_accname.setText("ชื่อบัญชี : {}".format(acc_name))
-        self.lbl_accno.setText("เลขบัญชี : {}".format(acc_no))
-        self.lbl_amount.setText("จำนวน : {:,.2f} บาท".format(amount))
+            acc_name = cursor[0]['value']['acc_name']
+            acc_no = cursor[0]['value']['acc_no']
+            amount = self.amount
 
-        qrpath = "ppqr/qrtest.png"
-        qrdata = qr_code(acc_no.replace('-', ''),
-                         one_time=True, path_qr_code=qrpath, country="TH", money=str(amount), currency="THB")
+            self.lbl_accname.setText("ชื่อบัญชี : {}".format(acc_name))
+            self.lbl_accno.setText("เลขบัญชี : {}".format(acc_no))
+            self.lbl_amount.setText("จำนวน : {:,.2f} บาท".format(amount))
 
-        pixmap = QPixmap(qrpath)
-        pixmap = pixmap.scaled(self.lbl_qrcode.width(), self.lbl_qrcode.height())
-        self.lbl_qrcode.setPixmap(pixmap)
+            qrpath = "ppqr/qrtest.png"
+            qrdata = qr_code(acc_no.replace('-', ''),
+                             one_time=True, path_qr_code=qrpath, country="TH", money=str(amount), currency="THB")
+
+            pixmap = QPixmap(qrpath)
+            pixmap = pixmap.scaled(self.lbl_qrcode.width(), self.lbl_qrcode.height())
+            self.lbl_qrcode.setPixmap(pixmap)
 
     def confirm(self):
         frm_cus_payment.hide()
+
+    def setAmount(self, amount):
+        self.amount = amount
 
     # def cancel(self):
     #     frm_cus_payment.hide()

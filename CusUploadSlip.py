@@ -10,10 +10,13 @@
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
+from ucwblib import ICON_PATH
+
 
 class Ui_frm_cus_uploadslip(object):
-    def __init__(self, username=""):
+    def __init__(self, username="", oid=None):
         self.username = username
+        self.oid = oid
 
     def setupUi(self, frm_cus_uploadslip):
         frm_cus_uploadslip.setObjectName("frm_cus_uploadslip")
@@ -23,6 +26,9 @@ class Ui_frm_cus_uploadslip(object):
 
         frm_cus_uploadslip.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
         # frm_cus_uploadslip.setFixedSize(QtCore.QSize(900, 600))
+
+        # Set window icon
+        frm_cus_uploadslip.setWindowIcon(QtGui.QIcon(ICON_PATH))
 
         self.lbl_qrcode = QtWidgets.QLabel(frm_cus_uploadslip)
         self.lbl_qrcode.setGeometry(QtCore.QRect(30, 100, 321, 301))
@@ -84,6 +90,14 @@ class Ui_frm_cus_uploadslip(object):
 
         # Event-Driven
         self.btn_cancel.clicked.connect(self.cancel)
+        self.btn_confirm.clicked.connect(self.confirm)
+
+    def confirm(self):
+        print("{}/{} uploading... ".format(self.username, self.oid))
+        self.uploadSlip()
+
+    def uploadSlip(self):
+        pass
 
     def cancel(self):
         frm_cus_uploadslip.hide()

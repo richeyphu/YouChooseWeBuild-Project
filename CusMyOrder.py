@@ -12,10 +12,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QTableWidgetItem, QMessageBox
 
 import CusUploadSlip
-from ucwblib import GetDatabase, getSettings
-
-ORDER_STATUS = {'0': 'รอการชำระเงิน',
-                '1': 'รอแจ้งชำระเงิน'}
+from ucwblib import GetDatabase, getSettings, getOrderStatus, ICON_PATH, QMessageBox
 
 
 class Ui_frm_cus_myorder(object):
@@ -25,9 +22,10 @@ class Ui_frm_cus_myorder(object):
         self.orders = None
         self.orders_count = 0
         self.btn_view = list()
-        self.current_index = None
+        self.current_oid = None
         self.tax_rate = 0
         self.shipping_fee = 0
+        self.temp_cusInfo = tuple()
 
     def setupUi(self, frm_cus_myorder):
         frm_cus_myorder.setObjectName("frm_cus_myorder")
@@ -37,6 +35,9 @@ class Ui_frm_cus_myorder(object):
 
         frm_cus_myorder.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
         # frm_cus_myorder.setFixedSize(QtCore.QSize(900, 600))
+
+        # Set window icon
+        frm_cus_myorder.setWindowIcon(QtGui.QIcon(ICON_PATH))
 
         self.frame_header = QtWidgets.QFrame(frm_cus_myorder)
         self.frame_header.setGeometry(QtCore.QRect(0, 0, 901, 61))
@@ -279,6 +280,8 @@ class Ui_frm_cus_myorder(object):
         self.btn_back.clicked.connect(self.backClicked)
         self.btn_changeCus.clicked.connect(self.editCusInfo)
         self.btn_cancelChange.clicked.connect(self.cancelEditCusInfo)
+        self.btn_cancelOrder.clicked.connect(self.cancelOrder)
+        self.btn_changePwd.clicked.connect(self.changePassword)
 
     def getCusOrders(self):
         with GetDatabase() as conn:
@@ -312,8 +315,8 @@ class Ui_frm_cus_myorder(object):
 
     def setupTable(self):
         # Table Widget
-        self.tbl_order.setRowCount(0)  # Reset table
-        self.tbl_order.setColumnCount(0)  # Reset table
+        self.tbl_order.setRowCount(0)  # Reset Row
+        self.tbl_order.setColumnCount(0)  # Reset Column
         self.tbl_order.setRowCount(self.orders_count)
         self.tbl_order.setColumnCount(5)
         self.tbl_order.setEditTriggers(QtWidgets.QTableWidget.NoEditTriggers)  # Table Read-only
@@ -358,14 +361,16 @@ class Ui_frm_cus_myorder(object):
                 if v['shipping_info']['shipping']:
                     total += self.shipping_fee
                 # คูปองส่วนลด
-                discount = 0 if v['coupon'] == "" else self.getCouponValue(v['coupon'])
+                # discount = 0 if v['coupon'] == "" else self.getCouponValue(v['coupon'])
+                discount = float(v['coupon']['value'])
                 total -= discount
                 # สถานะ order
-                status = ORDER_STATUS["{}".format(v['status'])]
+                # status = ORDER_STATUS["{}".format(v['status'])]
+                status = getOrderStatus(v['status'])
 
                 # Button สำหรับเลือก Order
                 self.btn_view.append(QtWidgets.QPushButton("ดู"))
-                order_info = (v['cart'], v['shipping_info'], discount)
+                order_info = (v['cart'], v['shipping_info'], v['coupon'], v['status'])
                 self.btn_view[i].clicked.connect(partial(self.getSelectedOrder, i, oid, order_info))
                 self.tbl_order.setCellWidget(i, 0, self.btn_view[i])
 
@@ -387,31 +392,23 @@ class Ui_frm_cus_myorder(object):
         finally:
             self.tbl_order.resizeRowsToContents()
 
-    def getCouponValue(self, code: str):
-        value = 0
-        with GetDatabase() as conn:
-            db = conn.get_database('ucwb')
-            con = {'code': code.upper()}
-            found = db.coupons.count_documents(con)
-            if found:
-                cursor = db.coupons.find(con)
-                value = cursor[0]['value']
-        return value
-
     def getPriceSettings(self):
         settings = getSettings()
         self.shipping_fee = settings['shipping_fee']
         self.tax_rate = settings['tax_rate']
 
+    # แสดง Order ที่กด 'ดู'
     def getSelectedOrder(self, i, oid, data):
-        self.current_index = i
+        # self.current_index = i
+        self.current_oid = oid
         self.btn_view[i].setEnabled(False)
-        self.setOrderBtnEnabled(True)
+        self.setOrderBtnEnabled(True, data[3])
         # print("Order ID = {}".format(oid))
         self.lbl_orderId.setText("Order ID :\n{}".format(oid))
         self.lbl_order_list.setText("ข้อมูลคำสั่งซื้อ")
         self.lbl_cus_detail.setText("ข้อมูลในการจัดส่ง")
         self.txt_email.setDisabled(True)
+        self.saveTempCusInfo()
         try:
             self.showOrderDetailTable(data)
         except Exception as e:
@@ -420,10 +417,12 @@ class Ui_frm_cus_myorder(object):
     def showOrderDetailTable(self, data):
         cart = data[0]
         shipping = data[1]['shipping']
-        discount = data[2]
+        coupon_code = "ไม่มี" if data[2]['code'] == "" else data[2]['code']
+        discount = data[2]['value']
 
         num_row = len(cart) + 4
         self.setupOrderDetailTable(num_row)
+        self.showShippingInfo(data[1])
 
         net_total = 0
         for i, v in enumerate(cart):
@@ -452,13 +451,14 @@ class Ui_frm_cus_myorder(object):
         # ค่าจัดส่ง
         shipping_fee = self.shipping_fee if shipping else 0
         net_total += shipping_fee
-        self.tbl_order.setItem(num_row - 3, 0, QTableWidgetItem("ค่าจัดส่ง"))
+        shipping_text = "ส่งด่วน" if shipping_fee > 0 else "รับที่ร้าน"
+        self.tbl_order.setItem(num_row - 3, 0, QTableWidgetItem("ค่าจัดส่ง ({})".format(shipping_text)))
         item_shipping = QTableWidgetItem("{:,.2f}".format(shipping_fee))
         item_shipping.setTextAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
         self.tbl_order.setItem(num_row - 3, 3, item_shipping)
         # คูปองส่วนลด
         net_total -= discount if discount <= net_total else 0
-        self.tbl_order.setItem(num_row - 2, 0, QTableWidgetItem("ส่วนลด"))
+        self.tbl_order.setItem(num_row - 2, 0, QTableWidgetItem("ส่วนลด ({})".format(coupon_code)))
         item_shipping = QTableWidgetItem("-{:,.2f}".format(discount))
         item_shipping.setTextAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
         self.tbl_order.setItem(num_row - 2, 3, item_shipping)
@@ -474,8 +474,8 @@ class Ui_frm_cus_myorder(object):
 
     def setupOrderDetailTable(self, num_row):
         # Table Widget
-        self.tbl_order.setRowCount(0)  # Reset table
-        self.tbl_order.setColumnCount(0)  # Reset table
+        self.tbl_order.setRowCount(0)  # Reset Row
+        self.tbl_order.setColumnCount(0)  # Reset Column
         self.tbl_order.setRowCount(num_row)
         self.tbl_order.setColumnCount(4)
         self.tbl_order.setEditTriggers(QtWidgets.QTableWidget.NoEditTriggers)  # Table Read-only
@@ -501,16 +501,48 @@ class Ui_frm_cus_myorder(object):
         self.tbl_order.setColumnWidth(2, 50)
         self.tbl_order.setColumnWidth(4, 60)
 
+    def showShippingInfo(self, shipping_data):
+        self.txt_name.setText(shipping_data['name'])
+        self.txt_tel.setText(shipping_data['tel'])
+        self.txt_address.setText(shipping_data['address'])
+
+    def cancelOrder(self):
+        oid = self.current_oid
+        msg = QMessageBox()
+        ans = msg.question(msg, "ยกเลิกคำสั่งซื้อ",
+                           "คุณแน่ใจที่จะต้องการ 'ยกเลิกคำสั่งซื้อ' ใช่หรือไม่\n\nหากยกเลิกแล้วจะไม่สามารถย้อนกลับได้",
+                           msg.Yes | msg.No)
+        if ans == msg.Yes:
+            msg.setWindowTitle("")
+            with GetDatabase() as conn:
+                db = conn.get_database('ucwb')
+                con = {'oid': oid}
+                found = db.orders.count_documents(con)
+                if found:
+                    setTo = {'$set': {'status': '-1'}}
+                    db.orders.update_one(con, setTo)
+                    msg.setIcon(QMessageBox.Information)
+                    msg.setWindowTitle("ยกเลิกคำสั่งซื้อ")
+                    msg.setText("ยกเลิกคำสั่งซื้อสำเร็จ!")
+                    self.getCusOrders()  # Update Orders Table
+                else:
+                    msg.setIcon(QMessageBox.Critical)
+                    msg.setText("Error: Cannot cancel your order...")
+                msg.exec_()
+
+    # ยกเลิกดู Order Detail
     def backClicked(self):
         # self.btn_view[self.current_index].setEnabled(True)
         self.setOrderBtnEnabled(False)
-        self.current_index = None
+        # self.current_index = None
+        self.current_oid = None
         self.lbl_orderId.setText("Order ID :\n")
         self.lbl_order_list.setText("รายการคำสั่งซื้อ")
         self.lbl_cus_detail.setText("ข้อมูลลูกค้า")
         self.txt_email.setDisabled(False)
         # Load orders table
         try:
+            self.loadTempCusInfo()
             # self.getCusOrders()
             self.setupTable()
             self.addToTable()
@@ -518,10 +550,10 @@ class Ui_frm_cus_myorder(object):
             print(e)
 
     def confirmPayment(self):
-        if self.current_index is not None:
+        if self.current_oid is not None:
             # CusUploadSlip.frm_cus_uploadslip.exec_()
             frm_cus_uploadslip = QtWidgets.QDialog()
-            _ui = CusUploadSlip.Ui_frm_cus_uploadslip(username=self.username)
+            _ui = CusUploadSlip.Ui_frm_cus_uploadslip(username=self.username, oid=self.current_oid)
             _ui.setupUi(frm_cus_uploadslip)
             CusUploadSlip.frm_cus_uploadslip = frm_cus_uploadslip
             frm_cus_uploadslip.exec_()
@@ -537,10 +569,7 @@ class Ui_frm_cus_myorder(object):
             self.btn_changeCus.setText("ยืนยัน")
             self.btn_cancelChange.setEnabled(True)
             self.setCusInfoReadOnly(boolean=False)
-            self.temp_cusInfo = (self.txt_name.text(),
-                                 self.txt_tel.text(),
-                                 self.txt_email.text(),
-                                 self.txt_address.toPlainText())
+            self.saveTempCusInfo()
         else:
             self.saveCusInfo()
             self.btn_changeCus.setText("แก้ไขข้อมูล")
@@ -553,16 +582,25 @@ class Ui_frm_cus_myorder(object):
         self.btn_changeCus.setText("แก้ไขข้อมูล")
 
         self.setCusInfoReadOnly(boolean=True)
+        self.loadTempCusInfo()
+
+    def saveTempCusInfo(self):
+        self.temp_cusInfo = (self.txt_name.text(),
+                             self.txt_tel.text(),
+                             self.txt_email.text(),
+                             self.txt_address.toPlainText())
+
+    def loadTempCusInfo(self):
         self.txt_name.setText(self.temp_cusInfo[0])
         self.txt_tel.setText(self.temp_cusInfo[1])
         self.txt_email.setText(self.temp_cusInfo[2])
         self.txt_address.setText(self.temp_cusInfo[3])
 
     def saveCusInfo(self):
-        name = self.txt_name.text()
-        tel = self.txt_tel.text()
-        email = self.txt_email.text()
-        address = self.txt_address.toPlainText()
+        name = self.txt_name.text().strip()
+        tel = self.txt_tel.text().strip()
+        email = self.txt_email.text().strip()
+        address = self.txt_address.toPlainText().strip()
         msg = QMessageBox()
         msg.setWindowTitle("บันทึกข้อมูลลูกค้า")
         with GetDatabase() as conn:
@@ -582,17 +620,27 @@ class Ui_frm_cus_myorder(object):
                 msg.setText("Error: Cannot save shipping info\nPlease login again...")
             msg.exec_()
 
-    def setOrderBtnEnabled(self, boolean=True):
+    def setOrderBtnEnabled(self, boolean=True, status=None):
         self.btn_back.setEnabled(boolean)
         self.btn_viewMore.setEnabled(boolean)
-        self.btn_cancelOrder.setEnabled(boolean)
-        self.btn_showQR.setEnabled(boolean)
+        self.btn_cancelOrder.setEnabled(boolean if status != "-1" else False)
+        self.btn_showQR.setEnabled(boolean if status != "-1" else False)
+        self.btn_changeCus.setVisible(not boolean)
+        self.btn_changePwd.setVisible(not boolean)
+        self.btn_cancelChange.setVisible(not boolean)
+        if status == "-1":
+            self.btn_confirm.setEnabled(False)
+        else:
+            self.btn_confirm.setEnabled(True)
 
     def setCusInfoReadOnly(self, boolean=True):
         self.txt_name.setReadOnly(boolean)
         self.txt_tel.setReadOnly(boolean)
         self.txt_email.setReadOnly(boolean)
         self.txt_address.setReadOnly(boolean)
+
+    def changePassword(self):
+        print("Change Password")
 
     def retranslateUi(self, frm_cus_myorder):
         _translate = QtCore.QCoreApplication.translate
