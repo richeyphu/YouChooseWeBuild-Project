@@ -9,10 +9,11 @@
 from functools import partial
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtWidgets import QTableWidgetItem, QMessageBox
+from PyQt5.QtWidgets import QTableWidgetItem, QInputDialog, QLineEdit
 
+import CusPayment
 import CusUploadSlip
-from ucwblib import GetDatabase, getSettings, getOrderStatus, ICON_PATH, QMessageBox
+from ucwblib import GetDatabase, getSettings, getOrderStatus, ICON_PATH, QMessageBox, HashPassword
 
 
 class Ui_frm_cus_myorder(object):
@@ -23,6 +24,7 @@ class Ui_frm_cus_myorder(object):
         self.orders_count = 0
         self.btn_view = list()
         self.current_oid = None
+        self.current_net_total = 0
         self.tax_rate = 0
         self.shipping_fee = 0
         self.temp_cusInfo = tuple()
@@ -282,6 +284,7 @@ class Ui_frm_cus_myorder(object):
         self.btn_cancelChange.clicked.connect(self.cancelEditCusInfo)
         self.btn_cancelOrder.clicked.connect(self.cancelOrder)
         self.btn_changePwd.clicked.connect(self.changePassword)
+        self.btn_showQR.clicked.connect(self.showQrDialog)
 
     def getCusOrders(self):
         with GetDatabase() as conn:
@@ -370,7 +373,7 @@ class Ui_frm_cus_myorder(object):
 
                 # Button สำหรับเลือก Order
                 self.btn_view.append(QtWidgets.QPushButton("ดู"))
-                order_info = (v['cart'], v['shipping_info'], v['coupon'], v['status'])
+                order_info = (v['cart'], v['shipping_info'], v['coupon'], v['status'], total)
                 self.btn_view[i].clicked.connect(partial(self.getSelectedOrder, i, oid, order_info))
                 self.tbl_order.setCellWidget(i, 0, self.btn_view[i])
 
@@ -401,6 +404,7 @@ class Ui_frm_cus_myorder(object):
     def getSelectedOrder(self, i, oid, data):
         # self.current_index = i
         self.current_oid = oid
+        self.current_net_total = data[4]
         self.btn_view[i].setEnabled(False)
         self.setOrderBtnEnabled(True, data[3])
         # print("Order ID = {}".format(oid))
@@ -530,6 +534,14 @@ class Ui_frm_cus_myorder(object):
                     msg.setText("Error: Cannot cancel your order...")
                 msg.exec_()
 
+    def showQrDialog(self):
+        frm_cus_payment = QtWidgets.QDialog()
+        _ui = CusPayment.Ui_frm_cus_payment()
+        _ui.setAmount(self.current_net_total)
+        _ui.setupUi(frm_cus_payment)
+        CusPayment.frm_cus_payment = frm_cus_payment
+        frm_cus_payment.exec_()
+
     # ยกเลิกดู Order Detail
     def backClicked(self):
         # self.btn_view[self.current_index].setEnabled(True)
@@ -551,12 +563,12 @@ class Ui_frm_cus_myorder(object):
 
     def confirmPayment(self):
         if self.current_oid is not None:
-            # CusUploadSlip.frm_cus_uploadslip.exec_()
             frm_cus_uploadslip = QtWidgets.QDialog()
             _ui = CusUploadSlip.Ui_frm_cus_uploadslip(username=self.username, oid=self.current_oid)
             _ui.setupUi(frm_cus_uploadslip)
             CusUploadSlip.frm_cus_uploadslip = frm_cus_uploadslip
             frm_cus_uploadslip.exec_()
+            self.getCusOrders()
         else:
             msg = QMessageBox()
             msg.setWindowTitle("My Orders")
@@ -623,15 +635,18 @@ class Ui_frm_cus_myorder(object):
     def setOrderBtnEnabled(self, boolean=True, status=None):
         self.btn_back.setEnabled(boolean)
         self.btn_viewMore.setEnabled(boolean)
-        self.btn_cancelOrder.setEnabled(boolean if status != "-1" else False)
-        self.btn_showQR.setEnabled(boolean if status != "-1" else False)
         self.btn_changeCus.setVisible(not boolean)
         self.btn_changePwd.setVisible(not boolean)
         self.btn_cancelChange.setVisible(not boolean)
-        if status == "-1":
-            self.btn_confirm.setEnabled(False)
+        if boolean and status is not None:
+            boolean = True if '0' <= status <= '1' else False
+            self.btn_confirm.setEnabled(boolean)
+            self.btn_cancelOrder.setEnabled(boolean)
+            self.btn_showQR.setEnabled(boolean)
         else:
-            self.btn_confirm.setEnabled(True)
+            self.btn_confirm.setEnabled(boolean)
+            self.btn_cancelOrder.setEnabled(boolean)
+            self.btn_showQR.setEnabled(boolean)
 
     def setCusInfoReadOnly(self, boolean=True):
         self.txt_name.setReadOnly(boolean)
@@ -640,7 +655,46 @@ class Ui_frm_cus_myorder(object):
         self.txt_address.setReadOnly(boolean)
 
     def changePassword(self):
-        print("Change Password")
+        win_title = "เปลี่ยนรหัสผ่าน"
+        msg = QMessageBox()
+        msg.setWindowTitle(win_title)
+        old_pwd, ok = QInputDialog.getText(frm_cus_myorder, win_title, "กรุณาป้อนรหัสผ่านเดิม",
+                                           QLineEdit.Password)
+        if ok:
+            with GetDatabase() as conn:
+                db = conn.get_database('ucwb')
+                condition = {'username': {"$regex": f'^{self.username}$', "$options": "i"}}
+                found = db.users.count_documents(condition)
+                if found:
+                    cursor = db.users.find(condition)
+                    # password จาก database
+                    pwd_chunk = HashPassword(cursor[0]['password'])
+                    salt = pwd_chunk.getSaltFromChunk()
+                    key = pwd_chunk.getKeyFromChunk()
+                    # password ที่เพิ่งกรอก
+                    pwd = HashPassword(old_pwd).getHashedKey(salt)
+                    if key != pwd:
+                        msg.setIcon(msg.Critical)
+                        msg.setText("รหัสผ่านไม่ถูกต้อง")
+                        msg.exec_()
+                    else:
+                        new_pwd, ok = QInputDialog.getText(frm_cus_myorder, win_title, "กรุณาป้อนรหัสผ่านใหม่",
+                                                           QLineEdit.Password)
+                        if ok:
+                            renew_pwd, ok = QInputDialog.getText(frm_cus_myorder, win_title,
+                                                                 "กรุณาป้อนรหัสผ่านใหม่อีกครั้ง", QLineEdit.Password)
+                            if new_pwd != renew_pwd:
+                                msg.setIcon(msg.Warning)
+                                msg.setText("รหัสผ่านไม่ตรงกัน\nกรุณาลองใหม่อีกครั้ง")
+                                msg.exec_()
+                            else:
+                                # เปลี่ยน password ใหม่
+                                hashed_pwd = HashPassword(new_pwd)
+                                setTo = {'$set': {'password': hashed_pwd.getSaltAndHashChunk()}}
+                                db.users.update_one(condition, setTo)
+                                msg.setIcon(msg.Information)
+                                msg.setText("เปลี่ยนรหัสผ่านใหม่สำเร็จ")
+                                msg.exec_()
 
     def retranslateUi(self, frm_cus_myorder):
         _translate = QtCore.QCoreApplication.translate

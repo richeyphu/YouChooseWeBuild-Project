@@ -9,14 +9,20 @@
 
 
 from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QPixmap
+from PyQt5.QtWidgets import QFileDialog
 
-from ucwblib import ICON_PATH
+from ucwblib import ICON_PATH, GetDatabase, QMessageBox
+
+import gridfs
 
 
 class Ui_frm_cus_uploadslip(object):
     def __init__(self, username="", oid=None):
         self.username = username
         self.oid = oid
+        self.filepath = None
 
     def setupUi(self, frm_cus_uploadslip):
         frm_cus_uploadslip.setObjectName("frm_cus_uploadslip")
@@ -30,15 +36,15 @@ class Ui_frm_cus_uploadslip(object):
         # Set window icon
         frm_cus_uploadslip.setWindowIcon(QtGui.QIcon(ICON_PATH))
 
-        self.lbl_qrcode = QtWidgets.QLabel(frm_cus_uploadslip)
-        self.lbl_qrcode.setGeometry(QtCore.QRect(30, 100, 321, 301))
+        self.lbl_filearea = QtWidgets.QLabel(frm_cus_uploadslip)
+        self.lbl_filearea.setGeometry(QtCore.QRect(30, 100, 321, 301))
         font = QtGui.QFont()
         font.setFamily("Kanit")
         font.setPointSize(16)
-        self.lbl_qrcode.setFont(font)
-        self.lbl_qrcode.setStyleSheet("")
-        self.lbl_qrcode.setAlignment(QtCore.Qt.AlignCenter)
-        self.lbl_qrcode.setObjectName("lbl_qrcode")
+        self.lbl_filearea.setFont(font)
+        self.lbl_filearea.setStyleSheet("")
+        self.lbl_filearea.setAlignment(QtCore.Qt.AlignCenter)
+        self.lbl_filearea.setObjectName("lbl_filearea")
         self.frame_header = QtWidgets.QFrame(frm_cus_uploadslip)
         self.frame_header.setGeometry(QtCore.QRect(0, 0, 381, 91))
         self.frame_header.setStyleSheet("background-color: rgb(0, 148, 217);")
@@ -82,7 +88,7 @@ class Ui_frm_cus_uploadslip(object):
         self.btn_confirm.setObjectName("btn_confirm")
         self.horizontalLayout.addWidget(self.btn_confirm)
         self.frame_header.raise_()
-        self.lbl_qrcode.raise_()
+        self.lbl_filearea.raise_()
         self.horizontalLayoutWidget.raise_()
 
         self.retranslateUi(frm_cus_uploadslip)
@@ -91,13 +97,76 @@ class Ui_frm_cus_uploadslip(object):
         # Event-Driven
         self.btn_cancel.clicked.connect(self.cancel)
         self.btn_confirm.clicked.connect(self.confirm)
+        self.lbl_filearea.mousePressEvent = self.selectFile
+        # Makes label supported drag-and-drop
+        self.lbl_filearea.setAcceptDrops(True)
+        self.lbl_filearea.dragEnterEvent = self.fileDragEntered
+        self.lbl_filearea.dragMoveEvent = self.fileDragMoved
+        self.lbl_filearea.dropEvent = self.fileDropped
+
+    def selectFile(self, event):
+        options = QFileDialog.Options()
+        # options |= QFileDialog.DontUseNativeDialog
+        filename, _ = QFileDialog.getOpenFileName(frm_cus_uploadslip, "Upload Payment Slip", "",
+                                                  "Image files (*.jpg *.jpeg *.png)", options=options)
+        if filename:
+            self.filepath = filename
+            # self.lbl_filearea.setText(filename.split('/')[-1])
+            self.displaySelectedImage()
+
+    def fileDragEntered(self, event):
+        if event.mimeData().hasUrls():
+            event.accept()
+        else:
+            event.ingore()
+
+    def fileDragMoved(self, event):
+        if event.mimeData().hasUrls():
+            event.setDropAction(Qt.CopyAction)
+            event.accept()
+        else:
+            event.ingore()
+
+    def fileDropped(self, event):
+        for url in event.mimeData().urls():
+            path = url.toLocalFile()
+        if path.split('.')[-1].lower() in ('jpg', 'jpeg', 'png'):
+            self.filepath = path
+            self.displaySelectedImage()
+            print(self.filepath)
+        else:
+            event.ignore()
+
+    def displaySelectedImage(self):
+        pixmap = QPixmap(self.filepath)
+        pixmap = pixmap.scaled(self.lbl_filearea.width(), self.lbl_filearea.height(), QtCore.Qt.KeepAspectRatio)
+        self.lbl_filearea.setPixmap(pixmap)
 
     def confirm(self):
-        print("{}/{} uploading... ".format(self.username, self.oid))
-        self.uploadSlip()
+        try:
+            self.uploadSlip()
+        except Exception as e:
+            print(e)
+        frm_cus_uploadslip.hide()
 
     def uploadSlip(self):
-        pass
+        msg = QMessageBox()
+        msg.setWindowTitle("Upload Slip")
+
+        file_location = self.filepath
+        file_extension = file_location.split('.')[-1].lower()
+        file_data = open(file_location, "rb")  # Reads file in binary
+        data = file_data.read()
+
+        with GetDatabase() as conn:
+            db = conn.get_database('ucwb')
+
+            fs = gridfs.GridFS(db)
+            fs.put(data, filename=self.oid, extension=file_extension, uploader=self.username, type="payslip")
+
+            msg.setIcon(QMessageBox.Information)
+            msg.setText("อัปโหลดสลิปสำเร็จ!")
+            msg.exec_()
 
     def cancel(self):
         frm_cus_uploadslip.hide()
@@ -105,9 +174,9 @@ class Ui_frm_cus_uploadslip(object):
     def retranslateUi(self, frm_cus_uploadslip):
         _translate = QtCore.QCoreApplication.translate
         frm_cus_uploadslip.setWindowTitle(_translate("frm_cus_uploadslip", "UCWB - Payment Proof"))
-        self.lbl_qrcode.setText(_translate("frm_cus_uploadslip", "Drag and Drop\n"
-                                                                 "ไฟล์รูปภาพสลิปโอนเงิน\n"
-                                                                 "(jpg/png)"))
+        self.lbl_filearea.setText(_translate("frm_cus_uploadslip", "Drag and Drop\n"
+                                                                   "ไฟล์รูปภาพสลิปโอนเงิน\n"
+                                                                   "(jpg/png)"))
         self.lbl_title.setText(_translate("frm_cus_uploadslip", "กรุณาอัปโหลด\n"
                                                                 "หลักฐานการชำระเงิน"))
         self.btn_cancel.setText(_translate("frm_cus_uploadslip", "ยกเลิก"))

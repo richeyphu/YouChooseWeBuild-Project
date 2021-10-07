@@ -17,11 +17,13 @@ ICON_ADMIN_PATH = "resource/logo/icon_admin.ico"
 # CONNECTION_STRING = "mongodb+srv://tni:zfqN44SoOI7dBwSm@cluster0.cc3d8.mongodb.net/ucwb?retryWrites=true&w=majority"
 CONNECTION_STRING = "mongodb+srv://tni_ucwb:fw17taFaN798hbGE@cluster0.cc3d8.mongodb.net/ucwb?retryWrites=true&w=majority"
 
-ORDER_STATUS = {'-1': 'ยกเลิกแล้ว',
+ORDER_STATUS = {'-2': 'ไม่ผ่านการตรวจสอบ',
+                '-1': 'ยกเลิกแล้ว',
                 '0': 'รอการชำระเงิน',
                 '1': 'รอแจ้งชำระเงิน',
-                '2': 'รอการจัดส่ง',
-                '3': 'จัดส่งแล้ว'}
+                '2': 'กำลังตรวจสอบ',
+                '3': 'รอการจัดส่ง',
+                '4': 'จัดส่งแล้ว'}
 
 
 # Connect to cloud database
