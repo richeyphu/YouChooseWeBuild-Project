@@ -3,6 +3,10 @@
 
 # YouChooseWeBuild-Project
 
+<div align="center">
+<img width="400" height="400" src="resource/logo/ucwb-logo1.png" alt="My Warehouse Logo">
+</div>
+
 **ITE-418 Final Project (Python 1/2564)**
 
 ## Development Tools
