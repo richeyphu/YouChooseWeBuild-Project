@@ -1,7 +1,9 @@
+<!--
 |University Project|[![CC0](https://licensebuttons.net/p/zero/1.0/88x31.png)](https://creativecommons.org/publicdomain/zero/1.0/)|
 |----|----|
+-->
 
-# YouChooseWeBuild-Project
+# YouChooseWeBuild-Project・[![License: MIT](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](LICENSE)
 
 <div align="center">
 <img src="resource/logo/ucwb-logo1.png" alt="My Warehouse Logo" style="max-width: 100%; height: auto;">
