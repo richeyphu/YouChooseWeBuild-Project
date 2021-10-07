@@ -11,7 +11,7 @@
 
 **You Choose, We Build (UCWB)** is a computer builder and shop manager software system, developed in Python language with cloud database, MongoDB Atlas.
 
-> ***ITE-418 Final Project (Python 1/2564)***
+> ***`ITE-418: Event-Driven Programming` Final Project (Python 1/2564)***
 
 ## Development Tools
 * **IDE :** `PyCharm Professional 2021.1.2 or newer`
