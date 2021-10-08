@@ -109,7 +109,7 @@ class Ui_frm_cus_uploadslip(object):
         # options |= QFileDialog.DontUseNativeDialog
         filename, _ = QFileDialog.getOpenFileName(frm_cus_uploadslip, "Upload Payment Slip", "",
                                                   "Image files (*.jpg *.jpeg *.png)", options=options)
-        if filename:
+        if filename and self.isFileExtensionValid(self.getFileExtension(filename)):
             self.filepath = filename
             # self.lbl_filearea.setText(filename.split('/')[-1])
             self.displaySelectedImage()
@@ -128,14 +128,21 @@ class Ui_frm_cus_uploadslip(object):
             event.ingore()
 
     def fileDropped(self, event):
-        for url in event.mimeData().urls():
-            path = url.toLocalFile()
-        if path.split('.')[-1].lower() in ('jpg', 'jpeg', 'png'):
+        # for url in event.mimeData().urls():
+        #     path = url.toLocalFile()
+        path = event.mimeData().urls()[0].toLocalFile()
+        if self.isFileExtensionValid(self.getFileExtension(path)):
             self.filepath = path
             self.displaySelectedImage()
-            print(self.filepath)
+            # print(self.filepath)
         else:
             event.ignore()
+
+    def getFileExtension(self, path):
+        return path.split('.')[-1].lower()
+
+    def isFileExtensionValid(self, name):
+        return name.lower() in ('jpg', 'jpeg', 'png')
 
     def displaySelectedImage(self):
         pixmap = QPixmap(self.filepath)
@@ -143,18 +150,23 @@ class Ui_frm_cus_uploadslip(object):
         self.lbl_filearea.setPixmap(pixmap)
 
     def confirm(self):
-        try:
-            self.uploadSlip()
-        except Exception as e:
-            print(e)
-        frm_cus_uploadslip.hide()
+        msg = QMessageBox()
+        ans = msg.question(msg, "Upload Slip", "ยืนยันการอัปโหลดไฟล์", msg.Yes | msg.No)
+        if ans == msg.Yes:
+            try:
+                self.uploadSlip()
+            except AttributeError:
+                msg.setWindowTitle("Upload Slip")
+                msg.setIcon(msg.Warning)
+                msg.setText("กรุณาเลือกไฟล์ที่ต้องการจะอัปโหลด")
+            frm_cus_uploadslip.hide()
 
     def uploadSlip(self):
         msg = QMessageBox()
         msg.setWindowTitle("Upload Slip")
 
         file_location = self.filepath
-        file_extension = file_location.split('.')[-1].lower()
+        file_extension = self.getFileExtension(file_location)
         file_data = open(file_location, "rb")  # Reads file in binary
         data = file_data.read()
 

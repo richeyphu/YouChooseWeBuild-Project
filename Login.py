@@ -10,6 +10,7 @@ from datetime import datetime
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 # from PyQt5.QtWidgets import QMessageBox
+from PyQt5.QtWidgets import QInputDialog, QLineEdit
 
 import Register
 import CusMain
@@ -76,7 +77,7 @@ class Ui_frm_login(object):
         font.setPointSize(11)
         self.btn_login.setFont(font)
         self.btn_login.setStyleSheet("background:rgb(255, 124, 10);\n"
-"color: rgb(255, 255, 255);")
+                                     "color: rgb(255, 255, 255);")
         self.btn_login.setObjectName("btn_login")
         self.layout_btn.addWidget(self.btn_login)
         self.btn_register = QtWidgets.QPushButton(self.verticalLayoutWidget)
@@ -233,12 +234,56 @@ class Ui_frm_login(object):
 
     def forgotPassword(self, event):
         try:
+            win_title = "ลืมรหัสผ่าน"
             msg = QMessageBox()
-            msg.setWindowTitle("Fotgot Password")
-            msg.setStyleSheet("QLabel{min-width: 80px;}")
-            msg.setIcon(QMessageBox.Information)
-            msg.setText("So sad!")
-            msg.exec_()
+            msg.setWindowTitle(win_title)
+            username, ok = QInputDialog.getText(frm_login, win_title, "กรุณากรอก Username ของท่าน")
+            if ok:
+                with GetDatabase() as conn:
+                    db = conn.get_database('ucwb')
+                    condition = {'username': {"$regex": f'^{username}$', "$options": "i"}}
+                    found = db.users.count_documents(condition)
+                    if found:
+                        cursor = db.users.find(condition)
+                        sq = cursor[0]['sq']
+                        question = sq['question']
+                        _ans, ok = QInputDialog.getText(frm_login, win_title, "กรุณาตอบคำถามรักษาความปลอดภัย\n\n"
+                                                                              "> {}".format(question))
+                        if ok:
+                            answer = sq['answer']
+                            # answer จาก database
+                            ans_chunk = HashPassword(answer)
+                            salt = ans_chunk.getSaltFromChunk()
+                            key = ans_chunk.getKeyFromChunk()
+                            # answer ที่กรอกจากหน้า forgot password
+                            ans = HashPassword(_ans.lower()).getHashedKey(salt)
+                            if key == ans:
+                                new_pwd, ok = QInputDialog.getText(frm_login, win_title, "กรุณากรอกรหัสผ่านใหม่",
+                                                                   QLineEdit.Password)
+                                if ok:
+                                    renew_pwd, ok = QInputDialog.getText(frm_login, win_title,
+                                                                         "กรุณากรอกรหัสผ่านใหม่อีกครั้ง",
+                                                                         QLineEdit.Password)
+                                    if new_pwd != renew_pwd:
+                                        msg.setIcon(msg.Warning)
+                                        msg.setText("รหัสผ่านไม่ตรงกัน\nกรุณาลองใหม่อีกครั้ง")
+                                        msg.exec_()
+                                    else:
+                                        # เปลี่ยน password ใหม่
+                                        hashed_pwd = HashPassword(new_pwd)
+                                        setTo = {'$set': {'password': hashed_pwd.getSaltAndHashChunk()}}
+                                        db.users.update_one(condition, setTo)
+                                        msg.setIcon(msg.Information)
+                                        msg.setText("เปลี่ยนรหัสผ่านใหม่สำเร็จ")
+                                        msg.exec_()
+                            else:
+                                msg.setIcon(msg.Critical)
+                                msg.setText("คำตอบไม่ถูกต้อง\nกรุณาลองใหม่อีกครั้ง")
+                                msg.exec_()
+                    else:
+                        msg.setIcon(msg.Warning)
+                        msg.setText("ขออภัย ไม่พบ Username ในระบบ")
+                        msg.exec_()
         except Exception as e:
             print(e)
         finally:
@@ -280,6 +325,7 @@ class Ui_frm_login(object):
 frm_login = None
 if __name__ == "__main__":
     import sys
+
     app = QtWidgets.QApplication(sys.argv)
     frm_login = QtWidgets.QDialog()
     ui = Ui_frm_login()

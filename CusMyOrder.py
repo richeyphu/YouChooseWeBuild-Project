@@ -658,7 +658,7 @@ class Ui_frm_cus_myorder(object):
         win_title = "เปลี่ยนรหัสผ่าน"
         msg = QMessageBox()
         msg.setWindowTitle(win_title)
-        old_pwd, ok = QInputDialog.getText(frm_cus_myorder, win_title, "กรุณาป้อนรหัสผ่านเดิม",
+        old_pwd, ok = QInputDialog.getText(frm_cus_myorder, win_title, "กรุณากรอกรหัสผ่านเดิม",
                                            QLineEdit.Password)
         if ok:
             with GetDatabase() as conn:
@@ -678,11 +678,11 @@ class Ui_frm_cus_myorder(object):
                         msg.setText("รหัสผ่านไม่ถูกต้อง")
                         msg.exec_()
                     else:
-                        new_pwd, ok = QInputDialog.getText(frm_cus_myorder, win_title, "กรุณาป้อนรหัสผ่านใหม่",
+                        new_pwd, ok = QInputDialog.getText(frm_cus_myorder, win_title, "กรุณากรอกรหัสผ่านใหม่",
                                                            QLineEdit.Password)
                         if ok:
                             renew_pwd, ok = QInputDialog.getText(frm_cus_myorder, win_title,
-                                                                 "กรุณาป้อนรหัสผ่านใหม่อีกครั้ง", QLineEdit.Password)
+                                                                 "กรุณากรอกรหัสผ่านใหม่อีกครั้ง", QLineEdit.Password)
                             if new_pwd != renew_pwd:
                                 msg.setIcon(msg.Warning)
                                 msg.setText("รหัสผ่านไม่ตรงกัน\nกรุณาลองใหม่อีกครั้ง")

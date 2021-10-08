@@ -10,6 +10,7 @@ from datetime import datetime
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 # from PyQt5.QtWidgets import QMessageBox
+from PyQt5.QtWidgets import QInputDialog
 
 from ucwblib import GetDatabase, HashPassword, ICON_PATH, QMessageBox
 
@@ -188,23 +189,26 @@ class Ui_frm_register(object):
 
             if self.isPasswordValid(password, re_password) and self.isNameValid(name) and self.isUsernameValid(
                     username):
-                hashed_pwd = HashPassword(password)
-                # with pymongo.MongoClient(CONN_STR) as conn:
-                with GetDatabase() as conn:
-                    db = conn.get_database('ucwb')
-                    db.users.insert_one({'username': username,
-                                         'password': hashed_pwd.getSaltAndHashChunk(),
-                                         'name': name,
-                                         'tel': tel,
-                                         'email': email,
-                                         'joined_date': datetime.now(),
-                                         'last_access': datetime.now()
-                                         })
+                sq = self.createSecurityQuestion()
+                if sq is not None:
+                    hashed_pwd = HashPassword(password)
+                    # with pymongo.MongoClient(CONN_STR) as conn:
+                    with GetDatabase() as conn:
+                        db = conn.get_database('ucwb')
+                        db.users.insert_one({'username': username,
+                                             'password': hashed_pwd.getSaltAndHashChunk(),
+                                             'name': name,
+                                             'tel': tel,
+                                             'email': email,
+                                             'sq': sq,
+                                             'joined_date': datetime.now(),
+                                             'last_access': datetime.now()
+                                             })
 
-                    msg.setIcon(QMessageBox.Information)
-                    msg.setText("Success!")
-                    msg.exec_()
-                    frm_register.close()
+                        msg.setIcon(QMessageBox.Information)
+                        msg.setText("Success!")
+                        msg.exec_()
+                        frm_register.close()
             else:
                 msg.setIcon(QMessageBox.Critical)
                 msg.setText("Error!")
@@ -213,6 +217,39 @@ class Ui_frm_register(object):
             print(e)
         finally:
             pass
+
+    def createSecurityQuestion(self):
+        win_title = "Security Question"
+        msg = QMessageBox()
+        msg.setWindowTitle(win_title)
+        while True:
+            question, ok = QInputDialog.getText(frm_register, win_title, "กรุณาตั้งคำถามรักษาความปลอดภัยของท่าน\n"
+                                                                         "(ไม่สามารถเปลี่ยนในภายหลังได้)")
+            if ok:
+                question = question.strip()
+                if question == "":
+                    msg.setIcon(msg.Warning)
+                    msg.setText("กรุณากรอกคำถามให้ถูกต้อง")
+                    msg.exec_()
+                    continue
+                else:
+                    while True:
+                        answer, ok = QInputDialog.getText(frm_register, win_title, "กรุณากรอกคำตอบของท่าน")
+                        if ok:
+                            answer = question.strip()
+                            if answer == "":
+                                msg.setIcon(msg.Warning)
+                                msg.setText("กรุณากรอกคำตอบให้ถูกต้อง")
+                                msg.exec_()
+                                continue
+                            else:
+                                hashed_ans = HashPassword(answer.lower())
+                                sq = {'question': question,
+                                      'answer': hashed_ans.getSaltAndHashChunk()}
+                                return sq
+                        return None
+            return None
+
 
     def isUsernameValid(self, username):
         if not username.isalnum():
@@ -256,6 +293,7 @@ class Ui_frm_register(object):
 frm_register = None
 if __name__ == "__main__":
     import sys
+
     app = QtWidgets.QApplication(sys.argv)
     frm_register = QtWidgets.QDialog()
     ui = Ui_frm_register()
