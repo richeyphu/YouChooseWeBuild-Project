@@ -402,21 +402,28 @@ class Ui_frm_cus_myorder(object):
 
     # แสดง Order ที่กด 'ดู'
     def getSelectedOrder(self, i, oid, data):
-        # self.current_index = i
-        self.current_oid = oid
-        self.current_net_total = data[4]
-        self.btn_view[i].setEnabled(False)
-        self.setOrderBtnEnabled(True, data[3])
-        # print("Order ID = {}".format(oid))
-        self.lbl_orderId.setText("Order ID :\n{}".format(oid))
-        self.lbl_order_list.setText("ข้อมูลคำสั่งซื้อ")
-        self.lbl_cus_detail.setText("ข้อมูลในการจัดส่ง")
-        self.txt_email.setDisabled(True)
-        self.saveTempCusInfo()
-        try:
-            self.showOrderDetailTable(data)
-        except Exception as e:
-            print(e)
+        if not self.btn_cancelChange.isEnabled():
+            # self.current_index = i
+            self.current_oid = oid
+            self.current_net_total = data[4]
+            self.btn_view[i].setEnabled(False)
+            self.setOrderBtnEnabled(True, data[3])
+            # print("Order ID = {}".format(oid))
+            self.lbl_orderId.setText("Order ID :\n{}".format(oid))
+            self.lbl_order_list.setText("ข้อมูลคำสั่งซื้อ")
+            self.lbl_cus_detail.setText("ข้อมูลในการจัดส่ง")
+            self.txt_email.setDisabled(True)
+            self.saveTempCusInfo()
+            try:
+                self.showOrderDetailTable(data)
+            except Exception as e:
+                print(e)
+        else:
+            msg = QMessageBox()
+            msg.setWindowTitle("ดูรายการคำสั่งซื้อ")
+            msg.setIcon(msg.Warning)
+            msg.setText("กรุณาทำการแก้ไขข้อมูลลูกค้าให้เรียบร้อยก่อน")
+            msg.exec_()
 
     def showOrderDetailTable(self, data):
         cart = data[0]
@@ -583,18 +590,23 @@ class Ui_frm_cus_myorder(object):
             self.setCusInfoReadOnly(boolean=False)
             self.saveTempCusInfo()
         else:
-            self.saveCusInfo()
-            self.btn_changeCus.setText("แก้ไขข้อมูล")
-            self.btn_cancelChange.setEnabled(False)
-            self.setCusInfoReadOnly(boolean=True)
-            self.temp_cusInfo = tuple()
+            msg = QMessageBox()
+            confirm = msg.question(msg, "ยืนยันการแก้ไข", "ท่านต้องการบันทึกการแก้ไขข้อมูลลูกค้าใช่หรือไม่", msg.Yes | msg.No)
+            if confirm == msg.Yes:
+                self.saveCusInfo()
+                self.btn_changeCus.setText("แก้ไขข้อมูล")
+                self.btn_cancelChange.setEnabled(False)
+                self.setCusInfoReadOnly(boolean=True)
+                self.temp_cusInfo = tuple()
 
     def cancelEditCusInfo(self):
-        self.btn_cancelChange.setEnabled(False)
-        self.btn_changeCus.setText("แก้ไขข้อมูล")
-
-        self.setCusInfoReadOnly(boolean=True)
-        self.loadTempCusInfo()
+        msg = QMessageBox()
+        confirm = msg.question(msg, "ยืนยันการยกเลิก", "ท่านต้องการยกเลิกการแก้ไขข้อมูลลูกค้าใช่หรือไม่", msg.Yes | msg.No)
+        if confirm == msg.Yes:
+            self.btn_cancelChange.setEnabled(False)
+            self.btn_changeCus.setText("แก้ไขข้อมูล")
+            self.setCusInfoReadOnly(boolean=True)
+            self.loadTempCusInfo()
 
     def saveTempCusInfo(self):
         self.temp_cusInfo = (self.txt_name.text(),

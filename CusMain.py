@@ -316,15 +316,15 @@ class Ui_frm_cus_main(object):
         self.btn_build.clicked.connect(self.buildNow)
         self.btn_settings.clicked.connect(self.myOrder)
 
-        # self.tbl_item.mousePressEvent = self.getSelectItem
-        frm_cus_main.keyPressEvent = self.ctrlKey_press
-        frm_cus_main.keyReleaseEvent = self.ctrlKey_release
+        frm_cus_main.keyPressEvent = self.ctrlKey_pressed
+        frm_cus_main.keyReleaseEvent = self.ctrlKey_released
+        frm_cus_main.closeEvent = self.confirmClosing
 
-    def ctrlKey_press(self, event):
+    def ctrlKey_pressed(self, event):
         if event.key() == QtCore.Qt.Key_Control:
             self.btn_build.setText("Clear All")
 
-    def ctrlKey_release(self, event):
+    def ctrlKey_released(self, event):
         if event.key() == QtCore.Qt.Key_Control:
             self.btn_build.setText("Build Now")
 
@@ -569,6 +569,14 @@ class Ui_frm_cus_main(object):
         _ui.setupUi(frm_cus_myorder)
         CusMyOrder.frm_cus_myorder = frm_cus_myorder
         frm_cus_myorder.exec_()
+
+    def confirmClosing(self, event):
+        msg = QMessageBox()
+        confirm = msg.question(msg, "ยืนยันการปิดโปรแกรม", "ท่านต้องการจะปิดโปรแกรมใช่หรือไม่", msg.Yes | msg.No)
+        if confirm == msg.Yes:
+            event.accept()
+        else:
+            event.ignore()
 
     def retranslateUi(self, frm_cus_main):
         _translate = QtCore.QCoreApplication.translate

@@ -236,20 +236,24 @@ class Ui_frm_register(object):
                     while True:
                         answer, ok = QInputDialog.getText(frm_register, win_title, "กรุณากรอกคำตอบของท่าน")
                         if ok:
-                            answer = question.strip()
+                            answer = answer.strip()
                             if answer == "":
                                 msg.setIcon(msg.Warning)
                                 msg.setText("กรุณากรอกคำตอบให้ถูกต้อง")
                                 msg.exec_()
                                 continue
                             else:
-                                hashed_ans = HashPassword(answer.lower())
-                                sq = {'question': question,
-                                      'answer': hashed_ans.getSaltAndHashChunk()}
-                                return sq
-                        return None
+                                confirm = msg.question(msg, win_title, "ยืนยันการตั้งคำถามรักษาความปลอดภัย\n\n"
+                                                                       "Q : {}\n"
+                                                                       "A : {}".format(question, answer),
+                                                       msg.Yes | msg.No)
+                                if confirm == msg.Yes:
+                                    hashed_ans = HashPassword(answer.lower())
+                                    sq = {'question': question,
+                                          'answer': hashed_ans.getSaltAndHashChunk()}
+                                    return sq
+                        break
             return None
-
 
     def isUsernameValid(self, username):
         if not username.isalnum():
