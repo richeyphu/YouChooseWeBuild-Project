@@ -88,7 +88,7 @@
       <string notr="true">color: rgb(255, 255, 255);</string>
      </property>
      <property name="text">
-      <string>Hi, admin!</string>
+      <string>Admin Dashboard</string>
      </property>
      <property name="alignment">
       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -498,7 +498,7 @@
      <widget class="QLabel" name="lbl_pro_found">
       <property name="geometry">
        <rect>
-        <x>20</x>
+        <x>10</x>
         <y>20</y>
         <width>281</width>
         <height>31</height>
@@ -923,7 +923,7 @@
      <widget class="QLabel" name="lbl_cus_found">
       <property name="geometry">
        <rect>
-        <x>20</x>
+        <x>10</x>
         <y>20</y>
         <width>281</width>
         <height>31</height>
@@ -1563,6 +1563,22 @@ color: rgb(255, 255, 255);</string>
       </property>
       <property name="text">
        <string>ยกเลิก</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="lbl_shop_logo">
+      <property name="geometry">
+       <rect>
+        <x>630</x>
+        <y>460</y>
+        <width>100</width>
+        <height>100</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Logo</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
       </property>
      </widget>
     </widget>
