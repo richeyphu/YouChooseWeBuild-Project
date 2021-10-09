@@ -117,7 +117,7 @@
      <enum>QTabWidget::Rounded</enum>
     </property>
     <property name="currentIndex">
-     <number>0</number>
+     <number>3</number>
     </property>
     <property name="elideMode">
      <enum>Qt::ElideNone</enum>
@@ -1574,6 +1574,11 @@ color: rgb(255, 255, 255);</string>
         <height>100</height>
        </rect>
       </property>
+      <property name="font">
+       <font>
+        <pointsize>10</pointsize>
+       </font>
+      </property>
       <property name="text">
        <string>Logo</string>
       </property>
@@ -1618,6 +1623,53 @@ color: rgb(255, 255, 255);</string>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
  </widget>
+ <tabstops>
+  <tabstop>tabWidget</tabstop>
+  <tabstop>cmb_ord_statusSearch</tabstop>
+  <tabstop>txt_ord_search</tabstop>
+  <tabstop>btn_ord_search</tabstop>
+  <tabstop>tbl_ord_orders</tabstop>
+  <tabstop>tbl_ord_cart</tabstop>
+  <tabstop>cmb_ord_statusDetail</tabstop>
+  <tabstop>btn_ord_cancel</tabstop>
+  <tabstop>btn_ord_update</tabstop>
+  <tabstop>cmb_pro_sortby</tabstop>
+  <tabstop>txt_pro_search</tabstop>
+  <tabstop>btn_pro_search</tabstop>
+  <tabstop>tbl_pro_products</tabstop>
+  <tabstop>txt_pro_name</tabstop>
+  <tabstop>txt_pro_desc</tabstop>
+  <tabstop>txt_pro_brand</tabstop>
+  <tabstop>txt_pro_price</tabstop>
+  <tabstop>txt_pro_spec</tabstop>
+  <tabstop>cmb_pro_cat</tabstop>
+  <tabstop>btn_pro_cancel</tabstop>
+  <tabstop>btn_pro_add</tabstop>
+  <tabstop>cmb_cus_sortby</tabstop>
+  <tabstop>txt_cus_search</tabstop>
+  <tabstop>btn_cus_search</tabstop>
+  <tabstop>tbl_cus_customers</tabstop>
+  <tabstop>btn_cus_view</tabstop>
+  <tabstop>btn_cus_edit</tabstop>
+  <tabstop>cmb_shop_viewStat</tabstop>
+  <tabstop>btn_shop_viewStat</tabstop>
+  <tabstop>tbl_shop_stat</tabstop>
+  <tabstop>tbl_shop_coupons</tabstop>
+  <tabstop>cmb_shop_couponStatus</tabstop>
+  <tabstop>btn_shop_saveCoupon</tabstop>
+  <tabstop>rdo_shop_shippingNo</tabstop>
+  <tabstop>rdo_shop_shippingYes</tabstop>
+  <tabstop>txt_shop_shipping</tabstop>
+  <tabstop>rdo_shop_vatNo</tabstop>
+  <tabstop>rdo_shop_vatYes</tabstop>
+  <tabstop>txt_shop_vat</tabstop>
+  <tabstop>txt_shop_ppNum</tabstop>
+  <tabstop>txt_shop_ppName</tabstop>
+  <tabstop>btn_shop_saveSettings</tabstop>
+  <tabstop>btn_shop_cancelSettings</tabstop>
+  <tabstop>btn_shop_changePwd</tabstop>
+  <tabstop>btn_shop_exit</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>
