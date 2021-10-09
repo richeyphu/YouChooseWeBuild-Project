@@ -14,7 +14,7 @@
 > ***`ITE-418: Event-Driven Programming` Final Project (Python 1/2564)***
 
 ## Usage
-### Runs Script
+### Run Script
 ```py
 $ python3 _run.py
 ```
