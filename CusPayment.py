@@ -23,12 +23,12 @@ class Ui_frm_cus_payment(object):
 
     def setupUi(self, frm_cus_payment):
         frm_cus_payment.setObjectName("frm_cus_payment")
-        frm_cus_payment.resize(375, 480)
-        frm_cus_payment.setMinimumSize(QtCore.QSize(375, 480))
-        frm_cus_payment.setMaximumSize(QtCore.QSize(375, 480))
+        # frm_cus_payment.resize(375, 480)
+        # frm_cus_payment.setMinimumSize(QtCore.QSize(375, 480))
+        # frm_cus_payment.setMaximumSize(QtCore.QSize(375, 480))
+        frm_cus_payment.setFixedSize(QtCore.QSize(375, 480))
 
         frm_cus_payment.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
-        # frm_cus_payment.setFixedSize(QtCore.QSize(900, 600))
 
         # Set window icon
         frm_cus_payment.setWindowIcon(QtGui.QIcon(ICON_PATH))
@@ -189,10 +189,3 @@ if __name__ == "__main__":
     ui.setupUi(frm_cus_payment)
     frm_cus_payment.show()
     sys.exit(app.exec_())
-# else:
-#     import sys
-#
-#     app = QtWidgets.QApplication(sys.argv)
-#     frm_cus_payment = QtWidgets.QDialog()
-#     ui = Ui_frm_cus_payment()
-#     ui.setupUi(frm_cus_payment)

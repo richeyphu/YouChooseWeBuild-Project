@@ -14,15 +14,17 @@ from PyQt5.QtWidgets import QInputDialog, QLineEdit
 
 import Register
 import CusMain
+from AdminMain import Ui_frm_admin_main
 from ucwblib import GetDatabase, HashPassword, ICON_PATH, QMessageBox
 
 
 class Ui_frm_login(object):
     def setupUi(self, frm_login):
         frm_login.setObjectName("frm_login")
-        frm_login.resize(500, 350)
-        frm_login.setMinimumSize(QtCore.QSize(500, 350))
-        frm_login.setMaximumSize(QtCore.QSize(500, 350))
+        # frm_login.resize(500, 350)
+        # frm_login.setMinimumSize(QtCore.QSize(500, 350))
+        # frm_login.setMaximumSize(QtCore.QSize(500, 350))
+        frm_login.setFixedSize(QtCore.QSize(500, 350))
 
         frm_login.setWindowFlag(QtCore.Qt.WindowMinimizeButtonHint)
 
@@ -118,9 +120,6 @@ class Ui_frm_login(object):
         self.btn_login.clicked.connect(self.login)
         self.btn_register.clicked.connect(self.register)
         self.lbl_forgotPwd.mousePressEvent = self.forgotPassword
-
-        # app.lastWindowClosed.connect(self.onLastClosed)
-        # app.aboutToQuit.connect(self.onLastClosed)
 
     def login(self):
         login_code = 0
@@ -295,8 +294,17 @@ class Ui_frm_login(object):
 
     def showMainWindow(self, username):
         if username == "admin":
-            print("Shows admin main")
+            # Shows Admin Dashboard
+            try:
+                frm_admin_main = QtWidgets.QMainWindow()
+                _ui = Ui_frm_admin_main()
+                _ui.setupUi(frm_admin_main)
+                CusMain.frm_admin_main = frm_admin_main
+                frm_admin_main.show()
+            except Exception as e:
+                print(e)
         else:
+            # Shows Customer Main windows
             try:
                 # CusMain.USERNAME = username
                 frm_cus_main = QtWidgets.QMainWindow()
@@ -306,10 +314,6 @@ class Ui_frm_login(object):
                 frm_cus_main.show()
             except Exception as e:
                 print(e)
-
-    def onLastClosed(self):
-        print("bye")
-        app.instance().quit
 
     def retranslateUi(self, frm_login):
         _translate = QtCore.QCoreApplication.translate
@@ -332,12 +336,3 @@ if __name__ == "__main__":
     ui.setupUi(frm_login)
     frm_login.show()
     sys.exit(app.exec_())
-# else:
-#     try:
-#         import sys
-#         app = QtWidgets.QApplication(sys.argv)
-#         frm_login = QtWidgets.QDialog()
-#         ui = Ui_frm_login()
-#         ui.setupUi(frm_login)
-#     except Exception as e:
-#         print(e)

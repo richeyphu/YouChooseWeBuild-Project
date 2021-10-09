@@ -10,7 +10,7 @@ from hashlib import pbkdf2_hmac
 from os import urandom
 
 ICON_PATH = "resource/logo/icon.ico"
-ICON_ADMIN_PATH = "resource/logo/icon_admin.ico"
+ICON_PATH_ADMIN = "resource/logo/icon_admin.ico"
 
 # CONNECTION_STRING = "mongodb+srv://<...>"
 # CONNECTION_STRING = "mongodb+srv://admin:NOCvZLbzSxi8IsCB@cluster0.cc3d8.mongodb.net/ucwb?retryWrites=true&w=majority"

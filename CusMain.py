@@ -33,9 +33,10 @@ class Ui_frm_cus_main(object):
     def setupUi(self, frm_cus_main):
         frm_cus_main.setObjectName("frm_cus_main")
         frm_cus_main.setWindowModality(QtCore.Qt.ApplicationModal)
-        frm_cus_main.resize(1080, 720)
-        frm_cus_main.setMinimumSize(QtCore.QSize(1080, 720))
-        frm_cus_main.setMaximumSize(QtCore.QSize(1080, 720))
+        # frm_cus_main.resize(1080, 720)
+        # frm_cus_main.setMinimumSize(QtCore.QSize(1080, 720))
+        # frm_cus_main.setMaximumSize(QtCore.QSize(1080, 720))
+        frm_cus_main.setFixedSize(QtCore.QSize(1080, 720))
         frm_cus_main.setStyleSheet("")
 
         # Set window icon
@@ -316,6 +317,7 @@ class Ui_frm_cus_main(object):
         self.btn_build.clicked.connect(self.buildNow)
         self.btn_settings.clicked.connect(self.myOrder)
 
+        # main form
         frm_cus_main.keyPressEvent = self.ctrlKey_pressed
         frm_cus_main.keyReleaseEvent = self.ctrlKey_released
         frm_cus_main.closeEvent = self.confirmClosing
@@ -629,15 +631,3 @@ if __name__ == "__main__":
     ui.setupUi(frm_cus_main)
     frm_cus_main.show()
     sys.exit(app.exec_())
-# else:
-#     import sys
-#
-#     app = QtWidgets.QApplication(sys.argv)
-#     frm_cus_main = QtWidgets.QMainWindow()
-#     # ui = Ui_frm_cus_main()
-#     # ui.setupUi(frm_cus_main)
-
-
-# def setup_ui():
-#     ui = Ui_frm_cus_main()
-#     ui.setupUi(frm_cus_main)

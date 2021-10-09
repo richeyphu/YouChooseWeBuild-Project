@@ -304,9 +304,3 @@ if __name__ == "__main__":
     ui.setupUi(frm_register)
     frm_register.show()
     sys.exit(app.exec_())
-# else:
-#     import sys
-#     app = QtWidgets.QApplication(sys.argv)
-#     frm_register = QtWidgets.QDialog()
-#     ui = Ui_frm_register()
-#     ui.setupUi(frm_register)

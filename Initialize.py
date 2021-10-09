@@ -21,9 +21,8 @@ from ucwblib import ICON_PATH
 class Ui_frm_splash(object):
     def setupUi(self, frm_splash):
         frm_splash.setObjectName("frm_splash")
-        frm_splash.resize(510, 415)
-        # frm_splash.setMinimumSize(QtCore.QSize(515, 415))
-        # frm_splash.setMaximumSize(QtCore.QSize(515, 415))
+        # frm_splash.resize(510, 415)
+        frm_splash.setFixedSize(QtCore.QSize(510, 415))
 
         # Makes frameless window
         flags = QtCore.Qt.WindowFlags(QtCore.Qt.FramelessWindowHint | QtCore.Qt.WindowStaysOnTopHint)

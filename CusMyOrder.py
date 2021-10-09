@@ -31,9 +31,10 @@ class Ui_frm_cus_myorder(object):
 
     def setupUi(self, frm_cus_myorder):
         frm_cus_myorder.setObjectName("frm_cus_myorder")
-        frm_cus_myorder.resize(900, 600)
-        frm_cus_myorder.setMinimumSize(QtCore.QSize(900, 600))
-        frm_cus_myorder.setMaximumSize(QtCore.QSize(900, 600))
+        # frm_cus_myorder.resize(900, 600)
+        # frm_cus_myorder.setMinimumSize(QtCore.QSize(900, 600))
+        # frm_cus_myorder.setMaximumSize(QtCore.QSize(900, 600))
+        frm_cus_myorder.setFixedSize(QtCore.QSize(900, 600))
 
         frm_cus_myorder.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
         # frm_cus_myorder.setFixedSize(QtCore.QSize(900, 600))
@@ -748,10 +749,3 @@ if __name__ == "__main__":
     ui.setupUi(frm_cus_myorder)
     frm_cus_myorder.show()
     sys.exit(app.exec_())
-# else:
-#     import sys
-#
-#     app = QtWidgets.QApplication(sys.argv)
-#     frm_cus_myorder = QtWidgets.QDialog()
-#     ui = Ui_frm_cus_myorder()
-#     ui.setupUi(frm_cus_myorder)

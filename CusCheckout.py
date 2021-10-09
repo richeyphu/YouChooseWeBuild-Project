@@ -547,10 +547,3 @@ if __name__ == "__main__":
     ui.setupUi(frm_cus_checkout)
     frm_cus_checkout.show()
     sys.exit(app.exec_())
-# else:
-#     import sys
-#
-#     app = QtWidgets.QApplication(sys.argv)
-#     frm_cus_checkout = QtWidgets.QDialog()
-#     ui = Ui_frm_cus_checkout()
-#     ui.setupUi(frm_cus_checkout)
