@@ -22,6 +22,7 @@ $ python3 _run.py
 - [`PyQt5`](https://pypi.org/project/PyQt5/), [`PyQt5-stubs`](https://pypi.org/project/PyQt5-stubs/), [`pyqt5-tools`](https://pypi.org/project/pyqt5-tools/)
 - [`pymongo`](https://pypi.org/project/pymongo/)
 - [`pypromptpay`](https://pypi.org/project/pypromptpay/)
+- [`pyperclip`](https://pypi.org/project/pyperclip/)
 
 ## Development Tools
 * **IDE :** [`PyCharm Professional 2021.1.2`](https://www.jetbrains.com/pycharm/) or newer
