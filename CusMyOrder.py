@@ -391,7 +391,7 @@ class Ui_frm_cus_myorder(object):
                 self.tbl_order.setItem(i, 4, item_status)
 
         except TypeError:
-            pass
+            pass  # สำหรับผู้ใช้ที่ไม่เคยมี Order มาก่อน
 
         finally:
             self.tbl_order.resizeRowsToContents()

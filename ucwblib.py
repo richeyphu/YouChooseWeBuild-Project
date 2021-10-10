@@ -117,7 +117,7 @@ def getSettings():
     return settings
 
 
-def getCouponValue(code: str):
+def getCouponValue(code: str, no_check=False):
     value = 0
     with GetDatabase() as conn:
         db = conn.get_database('ucwb')
@@ -125,7 +125,9 @@ def getCouponValue(code: str):
         found = db.coupons.count_documents(con)
         if found:
             cursor = db.coupons.find(con)
-            value = cursor[0]['value']
+            coupon = cursor[0]
+            if coupon['status'] or no_check:
+                value = coupon['value']
     return value
 
 

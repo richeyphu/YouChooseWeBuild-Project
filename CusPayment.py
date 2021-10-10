@@ -143,12 +143,12 @@ class Ui_frm_cus_payment(object):
             self.lbl_amount.setText("จำนวน : {:,.2f} บาท".format(amount))
 
             # Check if 'temp' folder exists
-            path = "temp"
+            path = "temp/qr"
             if not os.path.exists(path):
                 os.makedirs(path)
 
             current_time = str(datetime.now().replace(microsecond=0)).replace(':', '-')
-            qr_path = "temp/qr_{}.png".format(current_time)
+            qr_path = "{}/qr_{}.png".format(path, current_time)
             # Creating PromptPay QR Code
             qr_code(acc_no.replace('-', ''),
                     one_time=True, path_qr_code=qr_path, country="TH", money=str(amount), currency="THB")
