@@ -117,7 +117,7 @@
      <enum>QTabWidget::Rounded</enum>
     </property>
     <property name="currentIndex">
-     <number>3</number>
+     <number>0</number>
     </property>
     <property name="elideMode">
      <enum>Qt::ElideNone</enum>
@@ -531,7 +531,7 @@
        <string>ตรวจสอบสลิป</string>
       </property>
      </widget>
-     <widget class="QPushButton" name="btn_ord_viewSlip_2">
+     <widget class="QPushButton" name="btn_ord_viewAddress">
       <property name="geometry">
        <rect>
         <x>790</x>
@@ -1817,7 +1817,7 @@ color: rgb(255, 255, 255);</string>
   <tabstop>tbl_ord_cart</tabstop>
   <tabstop>cmb_ord_statusDetail</tabstop>
   <tabstop>txt_ord_trackingNo</tabstop>
-  <tabstop>btn_ord_viewSlip_2</tabstop>
+  <tabstop>btn_ord_viewAddress</tabstop>
   <tabstop>btn_ord_viewSlip</tabstop>
   <tabstop>btn_ord_cancel</tabstop>
   <tabstop>btn_ord_update</tabstop>
