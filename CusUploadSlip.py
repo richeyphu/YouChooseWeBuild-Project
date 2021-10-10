@@ -177,6 +177,10 @@ class Ui_frm_cus_uploadslip(object):
                 fs = gridfs.GridFS(db)
                 fs.put(data, filename=self.oid, extension=file_extension, uploader=self.username, type="payslip")
 
+                where = {'oid': self.oid}
+                setTo = {'$set': {'status': '2'}}
+                db.orders.update_one(where, setTo)
+
                 msg.setIcon(QMessageBox.Information)
                 msg.setText("อัปโหลดสลิปสำเร็จ!")
                 msg.exec_()

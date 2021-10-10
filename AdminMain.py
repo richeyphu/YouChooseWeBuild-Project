@@ -9,19 +9,26 @@
 
 
 import os
+
 from functools import partial
+
+import gridfs
+import pymongo
+import pyperclip
+from PIL import Image
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import QTimer, QDateTime, QLocale
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtWidgets import QTableWidgetItem
 
-from ucwblib import GetDatabase, ICON_PATH_ADMIN, QMessageBox, getOrderStatus, getSettings
+from ucwblib import GetDatabase, ICON_PATH_ADMIN, AdminQMessageBox as QMessageBox, getOrderStatus, getSettings
 
 
 class Ui_frm_admin_main(object):
     def __init__(self):
         self.orders = list()
+        self.orders_count = 0
 
     def setupUi(self, frm_admin_main):
         frm_admin_main.setObjectName("frm_admin_main")
@@ -59,7 +66,7 @@ class Ui_frm_admin_main(object):
         self.lbl_hi.setFont(font)
         self.lbl_hi.setLayoutDirection(QtCore.Qt.RightToLeft)
         self.lbl_hi.setStyleSheet("color: rgb(255, 255, 255);")
-        self.lbl_hi.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
+        self.lbl_hi.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignTrailing | QtCore.Qt.AlignVCenter)
         self.lbl_hi.setObjectName("lbl_hi")
         self.tabWidget = QtWidgets.QTabWidget(self.centralwidget)
         self.tabWidget.setGeometry(QtCore.QRect(20, 80, 1041, 611))
@@ -217,13 +224,13 @@ class Ui_frm_admin_main(object):
         font.setPointSize(12)
         self.btn_ord_viewSlip.setFont(font)
         self.btn_ord_viewSlip.setObjectName("btn_ord_viewSlip")
-        self.btn_ord_viewSlip_2 = QtWidgets.QPushButton(self.tab_orders)
-        self.btn_ord_viewSlip_2.setGeometry(QtCore.QRect(790, 470, 111, 41))
+        self.btn_ord_viewAddress = QtWidgets.QPushButton(self.tab_orders)
+        self.btn_ord_viewAddress.setGeometry(QtCore.QRect(790, 470, 111, 41))
         font = QtGui.QFont()
         font.setFamily("Kanit")
         font.setPointSize(12)
-        self.btn_ord_viewSlip_2.setFont(font)
-        self.btn_ord_viewSlip_2.setObjectName("btn_ord_viewSlip_2")
+        self.btn_ord_viewAddress.setFont(font)
+        self.btn_ord_viewAddress.setObjectName("btn_ord_viewAddress")
         self.tabWidget.addTab(self.tab_orders, "")
         self.tab_products = QtWidgets.QWidget()
         self.tab_products.setObjectName("tab_products")
@@ -541,7 +548,7 @@ class Ui_frm_admin_main(object):
         font.setPointSize(13)
         self.btn_shop_exit.setFont(font)
         self.btn_shop_exit.setStyleSheet("background-color: rgb(255, 124, 10);\n"
-"color: rgb(255, 255, 255);")
+                                         "color: rgb(255, 255, 255);")
         self.btn_shop_exit.setObjectName("btn_shop_exit")
         self.line_shop = QtWidgets.QFrame(self.tab_myShop)
         self.line_shop.setGeometry(QtCore.QRect(10, 290, 581, 16))
@@ -729,7 +736,7 @@ class Ui_frm_admin_main(object):
         font.setFamily("Kanit")
         font.setPointSize(18)
         self.lbl_clock.setFont(font)
-        self.lbl_clock.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
+        self.lbl_clock.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignTrailing | QtCore.Qt.AlignVCenter)
         self.lbl_clock.setObjectName("lbl_clock")
         frm_admin_main.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(frm_admin_main)
@@ -750,8 +757,8 @@ class Ui_frm_admin_main(object):
         frm_admin_main.setTabOrder(self.tbl_ord_orders, self.tbl_ord_cart)
         frm_admin_main.setTabOrder(self.tbl_ord_cart, self.cmb_ord_statusDetail)
         frm_admin_main.setTabOrder(self.cmb_ord_statusDetail, self.txt_ord_trackingNo)
-        frm_admin_main.setTabOrder(self.txt_ord_trackingNo, self.btn_ord_viewSlip_2)
-        frm_admin_main.setTabOrder(self.btn_ord_viewSlip_2, self.btn_ord_viewSlip)
+        frm_admin_main.setTabOrder(self.txt_ord_trackingNo, self.btn_ord_viewAddress)
+        frm_admin_main.setTabOrder(self.btn_ord_viewAddress, self.btn_ord_viewSlip)
         frm_admin_main.setTabOrder(self.btn_ord_viewSlip, self.btn_ord_cancel)
         frm_admin_main.setTabOrder(self.btn_ord_cancel, self.btn_ord_update)
         frm_admin_main.setTabOrder(self.btn_ord_update, self.cmb_pro_sortby)
@@ -801,12 +808,15 @@ class Ui_frm_admin_main(object):
 
         # Event-Driven
         # Orders tab
+        self.setOrderDetailBtnEnabled(boolean=False)
         self.getPriceSettings()
         self.getOrders()
         self.setupOrdersTable()
-        self.addToTable()
+        self.addToOrdersTable()
 
         self.btn_ord_search.clicked.connect(self.searchOrders)
+        self.btn_ord_update.clicked.connect(self.updateOrderDetail)
+        self.btn_ord_cancel.clicked.connect(self.orderDetailCancel)
 
         # Products tab
 
@@ -815,23 +825,36 @@ class Ui_frm_admin_main(object):
         # My Shop tab
         self.loadLogo()
 
+        self.btn_shop_exit.clicked.connect(frm_admin_main.close)
+
         # main form
         frm_admin_main.closeEvent = self.confirmClosing
 
-    def getOrders(self):
+    def getOrders(self, con: dict = None):
         with GetDatabase() as conn:
             db = conn.get_database('ucwb')
-            con = {}
+            con = {} if con is None else con
             found = db.orders.count_documents(con)
             if found:
-                cursor = db.orders.find(con)
+                cursor = db.orders.find(con).sort('oid', pymongo.DESCENDING)
                 self.orders = list(cursor)
                 self.orders_count = found
+            else:
+                self.orders = list()
+                self.orders_count = 0
 
     def getPriceSettings(self):
         settings = getSettings()
         self.shipping_fee = settings['shipping_fee']
         self.tax_rate = settings['tax_rate']
+
+    def setOrderDetailBtnEnabled(self, boolean=True):
+        self.btn_ord_viewSlip.setEnabled(boolean)
+        self.btn_ord_viewAddress.setEnabled(boolean)
+        self.btn_ord_update.setEnabled(boolean)
+        self.btn_ord_cancel.setEnabled(boolean)
+        # self.txt_ord_trackingNo.setEnabled(boolean)
+        # self.cmb_ord_statusDetail.setEnabled(boolean)
 
     def setupOrdersTable(self):
         # Update Found label
@@ -871,8 +894,8 @@ class Ui_frm_admin_main(object):
         self.tbl_ord_orders.horizontalHeader().setSectionResizeMode(2, QtWidgets.QHeaderView.ResizeToContents)
         self.tbl_ord_orders.horizontalHeader().setSectionResizeMode(5, QtWidgets.QHeaderView.Stretch)
 
-    def addToTable(self):
-        self.btn_view = list()
+    def addToOrdersTable(self):
+        self.btn_ord_view = list()
         try:
             for i, v in enumerate(self.orders):
                 oid = v['oid']
@@ -897,10 +920,10 @@ class Ui_frm_admin_main(object):
                 status = getOrderStatus(v['status'])
 
                 # Button สำหรับเลือก Order
-                self.btn_view.append(QtWidgets.QPushButton("ดู"))
+                self.btn_ord_view.append(QtWidgets.QPushButton("ดู"))
                 order_info = (v['cart'], v['shipping_info'], v['coupon'], v['status'], total)
-                self.btn_view[i].clicked.connect(partial(self.getSelectedOrder, i, oid, order_info))
-                self.tbl_ord_orders.setCellWidget(i, 0, self.btn_view[i])
+                self.btn_ord_view[i].clicked.connect(partial(self.getSelectedOrder, i, oid, order_info))
+                self.tbl_ord_orders.setCellWidget(i, 0, self.btn_ord_view[i])
 
                 self.tbl_ord_orders.setItem(i, 1, QTableWidgetItem("{}".format(oid)))
 
@@ -923,11 +946,216 @@ class Ui_frm_admin_main(object):
             self.tbl_ord_orders.resizeRowsToContents()
 
     def searchOrders(self):
-        pass
+        search_txt = self.txt_ord_search.text()
+        status = self.getOrderStatusCode(self.cmb_ord_statusSearch.currentIndex())
+
+        con1 = {'$or': [{'oid': {"$regex": f'{search_txt}',
+                                 "$options": "i"}},
+                        {'username': {"$regex": f'{search_txt}',
+                                      "$options": "i"}}
+                        ]}
+        con2 = {'status': str(status)}
+        conditions = con1 if status is None else {'$and': [con1, con2]}
+        self.getOrders(conditions)
+        self.setupOrdersTable()
+        self.addToOrdersTable()
+
+    def getOrderStatusCode(self, index):
+        code = index
+        if 1 <= index <= 5:
+            code -= 1
+        elif index == 6:
+            code = -1
+        elif index == 7:
+            code = -2
+        else:
+            code = None
+        return code
+
+    def getOrderStatusCmbIndex(self, code):
+        index = code
+        if 0 <= code <= 4:
+            index += 1
+        elif code == -1:
+            index = 6
+        elif code == -2:
+            index = 7
+        return index
 
     # แสดง Order ที่กด 'ดู'
     def getSelectedOrder(self, i, oid, data):
-        pass
+        shipping = data[1]
+        status = int(data[3])
+
+        self.setOrderDetailBtnEnabled(boolean=True)
+        for btn in self.btn_ord_view:
+            btn.setEnabled(True)
+        self.btn_ord_view[i].setEnabled(False)
+        self.txt_ord_trackingNo.setEnabled(False)
+        self.cmb_ord_statusDetail.setEnabled(False)
+        self.cmb_ord_statusDetail.setCurrentIndex(self.getOrderStatusCmbIndex(status))
+        self.btn_ord_update.setText("แก้ไขข้อมูล")
+
+        # Event-Driven
+        self.btn_ord_viewSlip.disconnect()
+        self.btn_ord_viewAddress.disconnect()
+        self.btn_ord_viewSlip.clicked.connect(partial(self.viewOrderSlip, oid))
+        self.btn_ord_viewAddress.clicked.connect(partial(self.viewOrderAddress, shipping))
+
+        try:
+            self.showOrderDetailTable(data)
+        except Exception as e:
+            print(e)
+
+    def viewOrderAddress(self, data):
+        name = data['name']
+        tel = data['tel']
+        address = data['address']
+        shipping = "ส่งด่วน" if data['shipping'] else "รับที่ร้าน"
+        text = "ชื่อ\t: {}\nโทร\t: {}\nอยู่\t: {}\nการจัดส่ง\t: {}".format(name, tel, address, shipping)
+        pyperclip.copy(text)
+        text += "\n\n(Copied to clipboard)"
+
+        msg = QMessageBox()
+        msg.setWindowTitle("ข้อมูลการจัดส่ง")
+        msg.setText("{}".format(text))
+        msg.exec_()
+
+    def viewOrderSlip(self, oid):
+        try:
+            with GetDatabase() as conn:
+                db = conn.get_database('ucwb')
+                fs = gridfs.GridFS(db)
+
+                data = db.fs.files.find_one({'filename': oid})
+                file_id = data['_id']
+                file_extension = data['extension']
+                uploadDate = str(data['uploadDate'].replace(microsecond=0)).replace(':', '-')
+                output_data = fs.get(file_id).read()
+
+                download_location = "temp/payslip/"
+                if not os.path.exists(download_location):
+                    os.makedirs(download_location)
+                download_location += f"slip_{oid}_{uploadDate}.{file_extension}"
+                output = open(download_location, "wb")
+                output.write(output_data)
+                output.close()
+
+                # Display image
+                img = Image.open(fr"{download_location}")
+                img.show()
+
+        except TypeError:
+            msg = QMessageBox()
+            msg.setWindowTitle("ตรวจสอบสลิป")
+            msg.setIcon(QMessageBox.Critical)
+            msg.setText("ไม่พบสลิป")
+            msg.exec_()
+
+    def updateOrderDetail(self):
+        if self.btn_ord_update.text() == "แก้ไขข้อมูล":
+            self.btn_ord_update.setText("บันทึก")
+            self.txt_ord_trackingNo.setEnabled(True)
+            self.cmb_ord_statusDetail.setEnabled(True)
+        else:
+            self.btn_ord_update.setText("แก้ไขข้อมูล")
+            self.txt_ord_trackingNo.setEnabled(False)
+            self.cmb_ord_statusDetail.setEnabled(False)
+
+    def orderDetailCancel(self):
+        self.tbl_ord_cart.setRowCount(0)  # Reset Row
+        self.setOrderDetailBtnEnabled(boolean=False)
+        self.txt_ord_trackingNo.setEnabled(False)
+        self.cmb_ord_statusDetail.setEnabled(False)
+        self.btn_ord_update.setText("แก้ไขข้อมูล")
+        for btn in self.btn_ord_view:
+            btn.setEnabled(True)
+
+    def showOrderDetailTable(self, data):
+        cart = data[0]
+        shipping = data[1]['shipping']
+        coupon_code = "ไม่มี" if data[2]['code'] == "" else data[2]['code']
+        discount = data[2]['value']
+
+        num_row = len(cart) + 4
+        self.setupOrderDetailTable(num_row)
+
+        net_total = 0
+        for i, v in enumerate(cart):
+            price = v['price']
+            qty = v['qty']
+            total = price * qty
+            net_total += total
+
+            self.tbl_ord_cart.setItem(i, 0, QTableWidgetItem("{}".format(v['name'])))
+            item_price = QTableWidgetItem("{:,.2f}".format(price))
+            item_price.setTextAlignment(QtCore.Qt.AlignRight)
+            self.tbl_ord_cart.setItem(i, 1, item_price)
+            item_qty = QTableWidgetItem("{}".format(qty))
+            item_qty.setTextAlignment(QtCore.Qt.AlignRight)
+            self.tbl_ord_cart.setItem(i, 2, item_qty)
+            item_total = QTableWidgetItem("{:,.2f}".format(total))
+            item_total.setTextAlignment(QtCore.Qt.AlignRight)
+            self.tbl_ord_cart.setItem(i, 3, item_total)
+        # ภาษีมูลค่าเพิ่ม
+        vat = net_total * self.tax_rate / 100
+        net_total += vat
+        self.tbl_ord_cart.setItem(num_row - 4, 0, QTableWidgetItem("ภาษี ({:g}%)".format(self.tax_rate)))
+        item_shipping = QTableWidgetItem("{:,.2f}".format(vat))
+        item_shipping.setTextAlignment(QtCore.Qt.AlignRight)
+        self.tbl_ord_cart.setItem(num_row - 4, 3, item_shipping)
+        # ค่าจัดส่ง
+        shipping_fee = self.shipping_fee if shipping else 0
+        net_total += shipping_fee
+        shipping_text = "ส่งด่วน" if shipping_fee > 0 else "รับที่ร้าน"
+        self.tbl_ord_cart.setItem(num_row - 3, 0, QTableWidgetItem("ค่าจัดส่ง ({})".format(shipping_text)))
+        item_shipping = QTableWidgetItem("{:,.2f}".format(shipping_fee))
+        item_shipping.setTextAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
+        self.tbl_ord_cart.setItem(num_row - 3, 3, item_shipping)
+        # คูปองส่วนลด
+        net_total -= discount if discount <= net_total else 0
+        self.tbl_ord_cart.setItem(num_row - 2, 0, QTableWidgetItem("ส่วนลด ({})".format(coupon_code)))
+        item_shipping = QTableWidgetItem("-{:,.2f}".format(discount))
+        item_shipping.setTextAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
+        self.tbl_ord_cart.setItem(num_row - 2, 3, item_shipping)
+        # Display 'net_total'
+        font = QtGui.QFont()
+        font.setBold(True)
+        self.tbl_ord_cart.setItem(num_row - 1, 0, QTableWidgetItem("ราคาสุทธิ"))
+        self.tbl_ord_cart.item(num_row - 1, 0).setFont(font)
+        item_net_total = QTableWidgetItem("{:,.2f}".format(net_total))
+        item_net_total.setTextAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
+        item_net_total.setFont(font)
+        self.tbl_ord_cart.setItem(num_row - 1, 3, item_net_total)
+
+    def setupOrderDetailTable(self, num_row):
+        # Table Widget
+        self.tbl_ord_cart.setRowCount(0)  # Reset Row
+        self.tbl_ord_cart.setColumnCount(0)  # Reset Column
+        self.tbl_ord_cart.setRowCount(num_row)
+        self.tbl_ord_cart.setColumnCount(4)
+        self.tbl_ord_cart.setEditTriggers(QtWidgets.QTableWidget.NoEditTriggers)  # Table Read-only
+
+        # สร้าง Header
+        header1 = QtWidgets.QTableWidgetItem("รายการ")
+        header2 = QtWidgets.QTableWidgetItem("ราคา/หน่วย")
+        header3 = QtWidgets.QTableWidgetItem("จำนวน")
+        header4 = QtWidgets.QTableWidgetItem("รวม")
+
+        # ใส่ Header ให้ Table
+        self.tbl_ord_cart.setHorizontalHeaderItem(0, header1)
+        self.tbl_ord_cart.setHorizontalHeaderItem(1, header2)
+        self.tbl_ord_cart.setHorizontalHeaderItem(2, header3)
+        self.tbl_ord_cart.setHorizontalHeaderItem(3, header4)
+
+        # ตั้งค่าความกว้าง column
+        # self.tbl_ord_cart.horizontalHeader().setSectionResizeMode(0, QtWidgets.QHeaderView.Interactive)
+        # self.tbl_ord_cart.horizontalHeader().setStretchLastSection(True)
+        # self.tbl_ord_cart.horizontalHeader().setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
+        self.tbl_ord_cart.setColumnWidth(0, 150)
+        self.tbl_ord_cart.setColumnWidth(1, 90)
+        self.tbl_ord_cart.setColumnWidth(2, 50)
+        self.tbl_ord_cart.setColumnWidth(4, 60)
 
     def loadLogo(self):
         logo_path = "resource/logo/ucwb-logo2.png"
@@ -962,7 +1190,7 @@ class Ui_frm_admin_main(object):
         item = self.tbl_ord_orders.horizontalHeaderItem(1)
         item.setText(_translate("frm_admin_main", "วันที่สั่งซื้อ"))
         item = self.tbl_ord_orders.horizontalHeaderItem(2)
-        item.setText(_translate("frm_admin_main", "ราคารวม"))
+        item.setText(_translate("frm_admin_main", "รวม"))
         item = self.tbl_ord_orders.horizontalHeaderItem(3)
         item.setText(_translate("frm_admin_main", "สถานะ"))
         self.btn_ord_search.setText(_translate("frm_admin_main", "ค้นหา"))
@@ -988,7 +1216,7 @@ class Ui_frm_admin_main(object):
         item.setText(_translate("frm_admin_main", "ราคารวม"))
         self.btn_ord_update.setText(_translate("frm_admin_main", "แก้ไขข้อมูล"))
         self.lbl_ord_statusSearch.setText(_translate("frm_admin_main", "สถานะ"))
-        self.cmb_ord_statusSearch.setItemText(0, _translate("frm_admin_main", "..."))
+        self.cmb_ord_statusSearch.setItemText(0, _translate("frm_admin_main", "แสดงทั้งหมด"))
         self.cmb_ord_statusSearch.setItemText(1, _translate("frm_admin_main", "รอการชำระเงิน"))
         self.cmb_ord_statusSearch.setItemText(2, _translate("frm_admin_main", "รอแจ้งชำระเงิน"))
         self.cmb_ord_statusSearch.setItemText(3, _translate("frm_admin_main", "กำลังตรวจสอบ"))
@@ -998,7 +1226,7 @@ class Ui_frm_admin_main(object):
         self.cmb_ord_statusSearch.setItemText(7, _translate("frm_admin_main", "ไม่ผ่านการตรวจสอบ"))
         self.lbl_ord_trackingNo.setText(_translate("frm_admin_main", "Tracking No."))
         self.btn_ord_viewSlip.setText(_translate("frm_admin_main", "ตรวจสอบสลิป"))
-        self.btn_ord_viewSlip_2.setText(_translate("frm_admin_main", "ดูการจัดส่ง"))
+        self.btn_ord_viewAddress.setText(_translate("frm_admin_main", "ดูการจัดส่ง"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_orders), _translate("frm_admin_main", "Orders"))
         item = self.tbl_pro_products.horizontalHeaderItem(0)
         item.setText(_translate("frm_admin_main", "ID"))
@@ -1101,9 +1329,11 @@ class Ui_frm_admin_main(object):
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_myShop), _translate("frm_admin_main", "My Shop"))
         self.lbl_clock.setText(_translate("frm_admin_main", "HH:MM:SS DD/MM/YYYY"))
 
+
 frm_admin_main = None
 if __name__ == "__main__":
     import sys
+
     app = QtWidgets.QApplication(sys.argv)
     frm_admin_main = QtWidgets.QMainWindow()
     ui = Ui_frm_admin_main()

@@ -17,7 +17,7 @@ from ucwblib import GetDatabase, getSettings, getCouponValue, ICON_PATH, QMessag
 
 class Ui_frm_cus_checkout(object):
 
-    def __init__(self, cart: dict = {}, username: str = None):
+    def __init__(self, cart: list = [], username: str = None):
         self.username = username
         self.cart = cart
         self.shipping_fee = 0
@@ -386,12 +386,12 @@ class Ui_frm_cus_checkout(object):
         if self.checkCusInfo():
             if self.chk_saveAddr.isChecked():
                 self.saveCusInfo()
-            self.saveOrder("1")
+            oid = self.saveOrder("1")
 
             # CusPayment.frm_cus_payment.exec_()
             frm_cus_payment = QtWidgets.QDialog()
-            _ui = CusPayment.Ui_frm_cus_payment()
-            _ui.setAmount(self.net_total)
+            _ui = CusPayment.Ui_frm_cus_payment(self.net_total, oid)
+            # _ui.setAmount(self.net_total)
             _ui.setupUi(frm_cus_payment)
             CusPayment.frm_cus_payment = frm_cus_payment
             frm_cus_payment.exec_()
@@ -503,6 +503,7 @@ class Ui_frm_cus_checkout(object):
                                   'date': datetime.now(),
                                   'status': status
                                   })
+        return oid
 
     def cancel(self):
         frm_cus_checkout.close()

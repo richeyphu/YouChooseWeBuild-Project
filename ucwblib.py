@@ -99,7 +99,7 @@ class QMessageBox(QtWidgets.QMessageBox):
 class AdminQMessageBox(QtWidgets.QMessageBox):
     def __init__(self):
         super().__init__()
-        self.setWindowIcon(QtGui.QIcon(ICON_ADMIN_PATH))
+        self.setWindowIcon(QtGui.QIcon(ICON_PATH_ADMIN))
 
 
 def getSettings():

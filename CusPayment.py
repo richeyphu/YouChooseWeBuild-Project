@@ -18,8 +18,9 @@ from ucwblib import GetDatabase, ICON_PATH
 
 class Ui_frm_cus_payment(object):
 
-    def __init__(self, amount=0):
+    def __init__(self, amount=0, oid=None):
         self.amount = amount
+        self.oid = oid
 
     def setupUi(self, frm_cus_payment):
         frm_cus_payment.setObjectName("frm_cus_payment")
@@ -147,8 +148,8 @@ class Ui_frm_cus_payment(object):
             if not os.path.exists(path):
                 os.makedirs(path)
 
-            current_time = str(datetime.now().replace(microsecond=0)).replace(':', '-')
-            qr_path = "{}/qr_{}.png".format(path, current_time)
+            # current_time = str(datetime.now().replace(microsecond=0)).replace(':', '-')
+            qr_path = "{}/qr_{}.png".format(path, self.oid)
             # Creating PromptPay QR Code
             qr_code(acc_no.replace('-', ''),
                     one_time=True, path_qr_code=qr_path, country="TH", money=str(amount), currency="THB")
