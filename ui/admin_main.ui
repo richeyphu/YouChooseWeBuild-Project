@@ -78,7 +78,7 @@
      <property name="font">
       <font>
        <family>Kanit</family>
-       <pointsize>16</pointsize>
+       <pointsize>18</pointsize>
       </font>
      </property>
      <property name="layoutDirection">
@@ -207,7 +207,7 @@
       <property name="font">
        <font>
         <family>Kanit Light</family>
-        <pointsize>10</pointsize>
+        <pointsize>11</pointsize>
        </font>
       </property>
      </widget>
@@ -247,7 +247,7 @@
       <property name="geometry">
        <rect>
         <x>610</x>
-        <y>480</y>
+        <y>474</y>
         <width>150</width>
         <height>22</height>
        </rect>
@@ -255,7 +255,7 @@
       <property name="font">
        <font>
         <family>Kanit Light</family>
-        <pointsize>10</pointsize>
+        <pointsize>11</pointsize>
        </font>
       </property>
       <item>
@@ -263,13 +263,48 @@
         <string>...</string>
        </property>
       </item>
+      <item>
+       <property name="text">
+        <string>รอการชำระเงิน</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>รอแจ้งชำระเงิน</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>กำลังตรวจสอบ</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>รอการจัดส่ง</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>จัดส่งแล้ว</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>ยกเลิกแล้ว</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>ไม่ผ่านการตรวจสอบ</string>
+       </property>
+      </item>
      </widget>
      <widget class="QPushButton" name="btn_ord_cancel">
       <property name="geometry">
        <rect>
-        <x>900</x>
-        <y>470</y>
-        <width>121</width>
+        <x>790</x>
+        <y>520</y>
+        <width>111</width>
         <height>41</height>
        </rect>
       </property>
@@ -348,9 +383,9 @@
      <widget class="QPushButton" name="btn_ord_update">
       <property name="geometry">
        <rect>
-        <x>900</x>
+        <x>910</x>
         <y>520</y>
-        <width>121</width>
+        <width>111</width>
         <height>41</height>
        </rect>
       </property>
@@ -361,7 +396,7 @@
        </font>
       </property>
       <property name="text">
-       <string>อัปเดตข้อมูล</string>
+       <string>แก้ไขข้อมูล</string>
       </property>
      </widget>
      <widget class="QLabel" name="lbl_ord_statusSearch">
@@ -395,7 +430,7 @@
       <property name="font">
        <font>
         <family>Kanit Light</family>
-        <pointsize>10</pointsize>
+        <pointsize>11</pointsize>
        </font>
       </property>
       <item>
@@ -403,6 +438,117 @@
         <string>...</string>
        </property>
       </item>
+      <item>
+       <property name="text">
+        <string>รอการชำระเงิน</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>รอแจ้งชำระเงิน</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>กำลังตรวจสอบ</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>รอการจัดส่ง</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>จัดส่งแล้ว</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>ยกเลิกแล้ว</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>ไม่ผ่านการตรวจสอบ</string>
+       </property>
+      </item>
+     </widget>
+     <widget class="QLineEdit" name="txt_ord_trackingNo">
+      <property name="geometry">
+       <rect>
+        <x>610</x>
+        <y>530</y>
+        <width>151</width>
+        <height>31</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <family>Kanit Light</family>
+        <pointsize>12</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+     </widget>
+     <widget class="QLabel" name="lbl_ord_trackingNo">
+      <property name="geometry">
+       <rect>
+        <x>610</x>
+        <y>506</y>
+        <width>101</width>
+        <height>21</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <family>Kanit</family>
+        <pointsize>12</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string>Tracking No.</string>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="btn_ord_viewSlip">
+      <property name="geometry">
+       <rect>
+        <x>910</x>
+        <y>470</y>
+        <width>111</width>
+        <height>41</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <family>Kanit</family>
+        <pointsize>12</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string>ตรวจสอบสลิป</string>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="btn_ord_viewSlip_2">
+      <property name="geometry">
+       <rect>
+        <x>790</x>
+        <y>470</y>
+        <width>111</width>
+        <height>41</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <family>Kanit</family>
+        <pointsize>12</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string>ดูการจัดส่ง</string>
+      </property>
      </widget>
     </widget>
     <widget class="QWidget" name="tab_products">
@@ -491,7 +637,7 @@
       <property name="font">
        <font>
         <family>Kanit Light</family>
-        <pointsize>10</pointsize>
+        <pointsize>11</pointsize>
        </font>
       </property>
      </widget>
@@ -520,7 +666,7 @@
       <property name="font">
        <font>
         <family>Kanit Light</family>
-        <pointsize>10</pointsize>
+        <pointsize>11</pointsize>
        </font>
       </property>
       <item>
@@ -638,7 +784,7 @@
         <x>760</x>
         <y>60</y>
         <width>261</width>
-        <height>421</height>
+        <height>433</height>
        </rect>
       </property>
       <layout class="QVBoxLayout" name="verticalLayout_pro">
@@ -660,7 +806,7 @@
          <property name="font">
           <font>
            <family>Kanit Light</family>
-           <pointsize>10</pointsize>
+           <pointsize>11</pointsize>
           </font>
          </property>
         </widget>
@@ -679,7 +825,14 @@
         </widget>
        </item>
        <item>
-        <widget class="QTextEdit" name="txt_pro_desc"/>
+        <widget class="QTextEdit" name="txt_pro_desc">
+         <property name="font">
+          <font>
+           <family>Kanit Light</family>
+           <pointsize>11</pointsize>
+          </font>
+         </property>
+        </widget>
        </item>
        <item>
         <widget class="QLabel" name="lbl_pro_brand">
@@ -699,7 +852,7 @@
          <property name="font">
           <font>
            <family>Kanit Light</family>
-           <pointsize>10</pointsize>
+           <pointsize>11</pointsize>
           </font>
          </property>
         </widget>
@@ -722,7 +875,7 @@
          <property name="font">
           <font>
            <family>Kanit Light</family>
-           <pointsize>10</pointsize>
+           <pointsize>11</pointsize>
           </font>
          </property>
         </widget>
@@ -745,7 +898,7 @@
          <property name="font">
           <font>
            <family>Kanit Light</family>
-           <pointsize>10</pointsize>
+           <pointsize>11</pointsize>
           </font>
          </property>
         </widget>
@@ -767,6 +920,7 @@
         <widget class="QComboBox" name="cmb_pro_cat">
          <property name="font">
           <font>
+           <family>Kanit Light</family>
            <pointsize>12</pointsize>
           </font>
          </property>
@@ -916,7 +1070,7 @@
       <property name="font">
        <font>
         <family>Kanit Light</family>
-        <pointsize>10</pointsize>
+        <pointsize>11</pointsize>
        </font>
       </property>
      </widget>
@@ -945,7 +1099,7 @@
       <property name="font">
        <font>
         <family>Kanit Light</family>
-        <pointsize>10</pointsize>
+        <pointsize>11</pointsize>
        </font>
       </property>
       <item>
@@ -1077,6 +1231,12 @@
         <height>231</height>
        </rect>
       </property>
+      <property name="font">
+       <font>
+        <family>Kanit</family>
+        <pointsize>11</pointsize>
+       </font>
+      </property>
      </widget>
      <widget class="QPushButton" name="btn_shop_viewStat">
       <property name="geometry">
@@ -1176,7 +1336,7 @@
       <property name="font">
        <font>
         <family>Kanit</family>
-        <pointsize>12</pointsize>
+        <pointsize>13</pointsize>
        </font>
       </property>
       <property name="styleSheet">
@@ -1221,6 +1381,12 @@ color: rgb(255, 255, 255);</string>
         <width>451</width>
         <height>221</height>
        </rect>
+      </property>
+      <property name="font">
+       <font>
+        <family>Kanit</family>
+        <pointsize>11</pointsize>
+       </font>
       </property>
      </widget>
      <widget class="QPushButton" name="btn_shop_saveCoupon">
@@ -1332,7 +1498,7 @@ color: rgb(255, 255, 255);</string>
          <x>0</x>
          <y>0</y>
          <width>311</width>
-         <height>298</height>
+         <height>301</height>
         </rect>
        </property>
        <layout class="QFormLayout" name="formLayout_settings">
@@ -1381,7 +1547,7 @@ color: rgb(255, 255, 255);</string>
           <property name="font">
            <font>
             <family>Kanit Light</family>
-            <pointsize>10</pointsize>
+            <pointsize>11</pointsize>
            </font>
           </property>
          </widget>
@@ -1441,7 +1607,7 @@ color: rgb(255, 255, 255);</string>
           <property name="font">
            <font>
             <family>Kanit Light</family>
-            <pointsize>10</pointsize>
+            <pointsize>11</pointsize>
            </font>
           </property>
          </widget>
@@ -1477,7 +1643,7 @@ color: rgb(255, 255, 255);</string>
           <property name="font">
            <font>
             <family>Kanit Light</family>
-            <pointsize>10</pointsize>
+            <pointsize>11</pointsize>
            </font>
           </property>
          </widget>
@@ -1487,7 +1653,7 @@ color: rgb(255, 255, 255);</string>
           <property name="font">
            <font>
             <family>Kanit Light</family>
-            <pointsize>10</pointsize>
+            <pointsize>11</pointsize>
            </font>
           </property>
          </widget>
@@ -1586,21 +1752,40 @@ color: rgb(255, 255, 255);</string>
        <set>Qt::AlignCenter</set>
       </property>
      </widget>
+     <widget class="QPushButton" name="btn_shop_deleteCoupon">
+      <property name="geometry">
+       <rect>
+        <x>470</x>
+        <y>470</y>
+        <width>121</width>
+        <height>41</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <family>Kanit</family>
+        <pointsize>12</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string>ลบคูปอง</string>
+      </property>
+     </widget>
     </widget>
    </widget>
    <widget class="QLabel" name="lbl_clock">
     <property name="geometry">
      <rect>
-      <x>790</x>
+      <x>730</x>
       <y>80</y>
-      <width>271</width>
+      <width>331</width>
       <height>31</height>
      </rect>
     </property>
     <property name="font">
      <font>
       <family>Kanit</family>
-      <pointsize>16</pointsize>
+      <pointsize>18</pointsize>
      </font>
     </property>
     <property name="text">
@@ -1631,6 +1816,9 @@ color: rgb(255, 255, 255);</string>
   <tabstop>tbl_ord_orders</tabstop>
   <tabstop>tbl_ord_cart</tabstop>
   <tabstop>cmb_ord_statusDetail</tabstop>
+  <tabstop>txt_ord_trackingNo</tabstop>
+  <tabstop>btn_ord_viewSlip_2</tabstop>
+  <tabstop>btn_ord_viewSlip</tabstop>
   <tabstop>btn_ord_cancel</tabstop>
   <tabstop>btn_ord_update</tabstop>
   <tabstop>cmb_pro_sortby</tabstop>
@@ -1656,6 +1844,7 @@ color: rgb(255, 255, 255);</string>
   <tabstop>tbl_shop_stat</tabstop>
   <tabstop>tbl_shop_coupons</tabstop>
   <tabstop>cmb_shop_couponStatus</tabstop>
+  <tabstop>btn_shop_deleteCoupon</tabstop>
   <tabstop>btn_shop_saveCoupon</tabstop>
   <tabstop>rdo_shop_shippingNo</tabstop>
   <tabstop>rdo_shop_shippingYes</tabstop>
@@ -1665,9 +1854,9 @@ color: rgb(255, 255, 255);</string>
   <tabstop>txt_shop_vat</tabstop>
   <tabstop>txt_shop_ppNum</tabstop>
   <tabstop>txt_shop_ppName</tabstop>
-  <tabstop>btn_shop_saveSettings</tabstop>
-  <tabstop>btn_shop_cancelSettings</tabstop>
   <tabstop>btn_shop_changePwd</tabstop>
+  <tabstop>btn_shop_cancelSettings</tabstop>
+  <tabstop>btn_shop_saveSettings</tabstop>
   <tabstop>btn_shop_exit</tabstop>
  </tabstops>
  <resources/>
