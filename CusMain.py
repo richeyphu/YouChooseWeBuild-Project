@@ -338,7 +338,7 @@ class Ui_frm_cus_main(object):
             db = conn.get_database('ucwb')
             condition = {'cat': cat}
             count = db.products.count_documents(condition)
-            cursor = db.products.find(condition)
+            cursor = db.products.find(condition).sort('pid', pymongo.ASCENDING)
             # cursor = list(db.products.find(condition))
 
             # สร้างตาราง
@@ -359,6 +359,7 @@ class Ui_frm_cus_main(object):
             brands.add(brand)
             keywords.add(v['keyword'])
             pid = v['pid']
+            state = v['status']
 
             # Spinner สำหรับเลือกจำนวนสินค้า
             self.widget_spin.append(QtWidgets.QSpinBox())
@@ -370,6 +371,8 @@ class Ui_frm_cus_main(object):
                 # self.widget_spin[i].setValue(qty_value[0])
             else:
                 self.widget_spin[i].setValue(0)
+            if not state:
+                self.widget_spin[i].setEnabled(False)
             self.widget_spin[i].setLocale(QLocale("en-us"))
             self.widget_spin[i].valueChanged.connect(partial(self.getSelectItem, i, self.current_cat))
             self.tbl_item.setCellWidget(i, 0, self.widget_spin[i])
@@ -379,7 +382,7 @@ class Ui_frm_cus_main(object):
             self.tbl_item.setItem(i, 3, QTableWidgetItem("{}".format(brand)))
 
             item_price = QTableWidgetItem("{:,.2f}".format(v['price']))
-            item_price.setTextAlignment(QtCore.Qt.AlignRight)
+            item_price.setTextAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
             self.tbl_item.setItem(i, 4, item_price)
 
             self.tbl_item.setItem(i, 5, QTableWidgetItem("{}".format(v['pid'])))
@@ -426,7 +429,7 @@ class Ui_frm_cus_main(object):
         elif sortby == 5:
             sort_con.append(('price', pymongo.DESCENDING))
         else:
-            sort_con.append(('id', pymongo.ASCENDING))
+            sort_con.append(('pid', pymongo.ASCENDING))
         # print(sort_con)
 
         with GetDatabase() as conn:

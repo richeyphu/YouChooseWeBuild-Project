@@ -9,6 +9,7 @@
 
 
 import os
+from datetime import datetime
 
 from functools import partial
 
@@ -27,6 +28,18 @@ from ucwblib import GetDatabase, ICON_PATH_ADMIN, AdminQMessageBox as QMessageBo
 
 class Ui_frm_admin_main(object):
     def __init__(self):
+        self.btn_cus_select = list()
+        self.customers_count = 0
+        self.customers = list()
+        self.users_count = 0
+        self.users = list()
+        self.current_pid = None
+        self.btn_pro_view = list()
+        self.products_count = 0
+        self.products = list()
+        self.tax_rate = 0
+        self.shipping_fee = 0
+        self.current_oid = None
         self.orders = list()
         self.orders_count = 0
 
@@ -286,6 +299,7 @@ class Ui_frm_admin_main(object):
         self.cmb_pro_sortby.addItem("")
         self.cmb_pro_sortby.addItem("")
         self.cmb_pro_sortby.addItem("")
+        self.cmb_pro_sortby.addItem("")
         self.lbl_pro_sortby = QtWidgets.QLabel(self.tab_products)
         self.lbl_pro_sortby.setGeometry(QtCore.QRect(340, 0, 101, 31))
         font = QtGui.QFont()
@@ -466,6 +480,7 @@ class Ui_frm_admin_main(object):
         font.setPointSize(11)
         self.cmb_cus_sortby.setFont(font)
         self.cmb_cus_sortby.setObjectName("cmb_cus_sortby")
+        self.cmb_cus_sortby.addItem("")
         self.cmb_cus_sortby.addItem("")
         self.cmb_cus_sortby.addItem("")
         self.cmb_cus_sortby.addItem("")
@@ -813,14 +828,33 @@ class Ui_frm_admin_main(object):
         self.getOrders()
         self.setupOrdersTable()
         self.addToOrdersTable()
+        self.cmb_ord_statusDetail.setEnabled(False)
+        self.txt_ord_trackingNo.setEnabled(False)
 
         self.btn_ord_search.clicked.connect(self.searchOrders)
         self.btn_ord_update.clicked.connect(self.updateOrderDetail)
-        self.btn_ord_cancel.clicked.connect(self.orderDetailCancel)
+        self.btn_ord_cancel.clicked.connect(lambda: self.orderDetailCancel(ask=True))
+        self.cmb_ord_statusDetail.currentIndexChanged.connect(self.statusDetailChanged)
 
         # Products tab
+        self.getProducts()
+        self.setupProductsTable()
+        self.addToProductsTable()
+
+        self.btn_pro_search.clicked.connect(self.searchProducts)
+        self.btn_pro_cancel.clicked.connect(self.productDetailCancel)
+        self.btn_pro_add.clicked.connect(self.productDetailBtnClicked)
 
         # Customers tab
+        self.getCustomers()
+        self.setupCustomersTable()
+        self.addToCustomersTable()
+        self.btn_cus_edit.setEnabled(False)
+        self.btn_cus_view.setEnabled(False)
+
+        self.btn_cus_search.clicked.connect(self.searchCustomers)
+        self.btn_cus_view.clicked.connect(self.cancelEditingCustomer)
+        self.btn_cus_edit.clicked.connect(self.updateSelectedCustomer)
 
         # My Shop tab
         self.loadLogo()
@@ -829,6 +863,8 @@ class Ui_frm_admin_main(object):
 
         # main form
         frm_admin_main.closeEvent = self.confirmClosing
+
+    ########## Orders tab starts here ##########
 
     def getOrders(self, con: dict = None):
         with GetDatabase() as conn:
@@ -969,8 +1005,8 @@ class Ui_frm_admin_main(object):
         elif index == 7:
             code = -2
         else:
-            code = None
-        return code
+            return None
+        return str(code)
 
     def getOrderStatusCmbIndex(self, code):
         index = code
@@ -984,28 +1020,42 @@ class Ui_frm_admin_main(object):
 
     # แสดง Order ที่กด 'ดู'
     def getSelectedOrder(self, i, oid, data):
-        shipping = data[1]
-        status = int(data[3])
+        if not self.cmb_ord_statusDetail.isEnabled():
+            self.current_oid = oid
+            shipping = data[1]
+            status = int(data[3])
 
-        self.setOrderDetailBtnEnabled(boolean=True)
-        for btn in self.btn_ord_view:
-            btn.setEnabled(True)
-        self.btn_ord_view[i].setEnabled(False)
-        self.txt_ord_trackingNo.setEnabled(False)
-        self.cmb_ord_statusDetail.setEnabled(False)
-        self.cmb_ord_statusDetail.setCurrentIndex(self.getOrderStatusCmbIndex(status))
-        self.btn_ord_update.setText("แก้ไขข้อมูล")
+            self.setOrderDetailBtnEnabled(boolean=True)
+            for btn in self.btn_ord_view:
+                btn.setEnabled(True)
+            self.btn_ord_view[i].setEnabled(False)
+            self.cmb_ord_statusDetail.setEnabled(False)
+            self.cmb_ord_statusDetail.setCurrentIndex(self.getOrderStatusCmbIndex(status))
+            self.btn_ord_update.setText("แก้ไขข้อมูล")
 
-        # Event-Driven
-        self.btn_ord_viewSlip.disconnect()
-        self.btn_ord_viewAddress.disconnect()
-        self.btn_ord_viewSlip.clicked.connect(partial(self.viewOrderSlip, oid))
-        self.btn_ord_viewAddress.clicked.connect(partial(self.viewOrderAddress, shipping))
+            # Event-Driven
+            self.btn_ord_viewSlip.disconnect()
+            self.btn_ord_viewAddress.disconnect()
+            self.btn_ord_viewSlip.clicked.connect(partial(self.viewOrderSlip, oid))
+            self.btn_ord_viewAddress.clicked.connect(partial(self.viewOrderAddress, shipping))
 
-        try:
-            self.showOrderDetailTable(data)
-        except Exception as e:
-            print(e)
+            if 'tracking_no' in shipping:
+                tracking_no = shipping['tracking_no']
+            else:
+                tracking_no = ""
+            self.txt_ord_trackingNo.setText(tracking_no)
+            self.txt_ord_trackingNo.setEnabled(False)
+
+            try:
+                self.showOrderDetailTable(data)
+            except Exception as e:
+                print(e)
+        else:
+            msg = QMessageBox()
+            msg.setWindowTitle("ดูรายละเอียดคำสั่งซื้อ")
+            msg.setText("กรุณาแก้ไขรายละเอียดคำสั่งซื้อให้เรียบร้อยก่อน")
+            msg.setIcon(msg.Warning)
+            msg.exec_()
 
     def viewOrderAddress(self, data):
         name = data['name']
@@ -1055,21 +1105,79 @@ class Ui_frm_admin_main(object):
     def updateOrderDetail(self):
         if self.btn_ord_update.text() == "แก้ไขข้อมูล":
             self.btn_ord_update.setText("บันทึก")
-            self.txt_ord_trackingNo.setEnabled(True)
+            # self.txt_ord_trackingNo.setEnabled(True)
             self.cmb_ord_statusDetail.setEnabled(True)
         else:
-            self.btn_ord_update.setText("แก้ไขข้อมูล")
-            self.txt_ord_trackingNo.setEnabled(False)
-            self.cmb_ord_statusDetail.setEnabled(False)
+            msg = QMessageBox()
+            ans = msg.question(msg, "บันทึกรายละเอียดคำสั่งซื้อ",
+                               "คุณแน่ใจที่จะต้องการ 'บันทึกรายละเอียดคำสั่งซื้อ' นี้ใช่หรือไม่",
+                               msg.Yes | msg.No)
+            if ans == msg.Yes:
+                if self.cmb_ord_statusDetail.currentIndex() > 0:
+                    self.btn_ord_update.setText("แก้ไขข้อมูล")
+                    self.txt_ord_trackingNo.setEnabled(False)
+                    self.cmb_ord_statusDetail.setEnabled(False)
+                    self.saveOrderDetail()
+                else:
+                    msg.setWindowTitle("บันทึกรายละเอียดคำสั่งซื้อ")
+                    msg.setText("กรุณาเลือก 'สถานะคำสั่งซื้อ' ให้ถูกต้อง")
+                    msg.setIcon(msg.Warning)
+                    msg.exec_()
 
-    def orderDetailCancel(self):
-        self.tbl_ord_cart.setRowCount(0)  # Reset Row
-        self.setOrderDetailBtnEnabled(boolean=False)
-        self.txt_ord_trackingNo.setEnabled(False)
-        self.cmb_ord_statusDetail.setEnabled(False)
-        self.btn_ord_update.setText("แก้ไขข้อมูล")
-        for btn in self.btn_ord_view:
-            btn.setEnabled(True)
+    def saveOrderDetail(self):
+        oid = self.current_oid
+        tracking_no = self.txt_ord_trackingNo.text().replace(' ', '').upper()
+        status_code = self.getOrderStatusCode(self.cmb_ord_statusDetail.currentIndex())
+        msg = QMessageBox()
+        with GetDatabase() as conn:
+            db = conn.get_database('ucwb')
+            con = {'oid': oid}
+            found = db.orders.count_documents(con)
+            if found:
+                setTo = {'$set': {'shipping_info.tracking_no': tracking_no,
+                                  'status': status_code}}
+                db.orders.update_one(con, setTo)
+                msg.setIcon(QMessageBox.Information)
+                msg.setText("บันทึกรายละเอียดคำสั่งซื้อสำเร็จ!")
+                self.getOrders()  # Update Orders Table
+                self.addToOrdersTable()
+                self.orderDetailCancel(ask=False)  # Cancel selected
+            else:
+                msg.setIcon(QMessageBox.Critical)
+                msg.setText("Error: Order ID not found!")
+            msg.exec_()
+
+    def orderDetailCancel(self, ask=True):
+        def cancelAction():
+            self.current_oid = None
+            self.tbl_ord_cart.setRowCount(0)  # Reset Row
+            self.setOrderDetailBtnEnabled(boolean=False)
+            self.txt_ord_trackingNo.setEnabled(False)
+            self.txt_ord_trackingNo.setText("")
+            self.cmb_ord_statusDetail.setEnabled(False)
+            self.cmb_ord_statusDetail.setCurrentIndex(0)
+            self.btn_ord_update.setText("แก้ไขข้อมูล")
+            for btn in self.btn_ord_view:
+                btn.setEnabled(True)
+
+        if not self.cmb_ord_statusDetail.isEnabled():
+            cancelAction()
+            return
+        if ask:
+            msg = QMessageBox()
+            ans = msg.question(msg, "แก้ไขรายละเอียดคำสั่งซื้อ",
+                               "คุณแน่ใจที่จะต้องการ 'ยกเลิกแก้ไขรายละเอียดคำสั่งซื้อ' นี้ใช่หรือไม่",
+                               msg.Yes | msg.No)
+            if ans == msg.Yes:
+                cancelAction()
+        else:
+            cancelAction()
+
+    def statusDetailChanged(self):
+        if self.cmb_ord_statusDetail.currentIndex() == 5:
+            self.txt_ord_trackingNo.setEnabled(True)
+        else:
+            self.txt_ord_trackingNo.setEnabled(False)
 
     def showOrderDetailTable(self, data):
         cart = data[0]
@@ -1156,6 +1264,558 @@ class Ui_frm_admin_main(object):
         self.tbl_ord_cart.setColumnWidth(1, 90)
         self.tbl_ord_cart.setColumnWidth(2, 50)
         self.tbl_ord_cart.setColumnWidth(4, 60)
+
+    ########## Orders tab ends here ##########
+
+    ########## Products tab starts here ##########
+
+    def getProducts(self, con: dict = None, sort: tuple = None):
+        con = {} if con is None else con
+        sort = ('pid', pymongo.ASCENDING) if sort is None else sort
+        with GetDatabase() as conn:
+            db = conn.get_database('ucwb')
+            found = db.products.count_documents(con)
+            if found:
+                cursor = db.products.find(con).sort([sort])
+                self.products = list(cursor)
+                self.products_count = found
+            else:
+                self.products = list()
+                self.products_count = 0
+
+    def addToProductsTable(self):
+        self.btn_pro_view = list()
+        self.btn_pro_state = list()
+        cursor = self.products
+        for i, v in enumerate(cursor):
+            pid = v['pid']
+            name = v['name']
+            desc = v['desc']
+            brand = v['brand']
+            price = v['price']
+            spec = v['keyword']
+            cat = v['cat']
+            date = str(v['date_added'].replace(microsecond=0))
+            state = v['status']
+
+            self.btn_pro_view.append(QtWidgets.QPushButton("ดู"))
+            pro_info = (pid, name, desc, brand, price, spec, cat)
+            self.btn_pro_view[i].clicked.connect(partial(self.getSelectedProduct, i, pro_info))
+            self.tbl_pro_products.setCellWidget(i, 0, self.btn_pro_view[i])
+
+            self.tbl_pro_products.setItem(i, 1, QTableWidgetItem("{}".format(pid)))
+            self.tbl_pro_products.setItem(i, 2, QTableWidgetItem("{}".format(name)))
+            self.tbl_pro_products.setItem(i, 3, QTableWidgetItem("{}".format(desc)))
+            self.tbl_pro_products.setItem(i, 4, QTableWidgetItem("{}".format(brand)))
+            item_price = QTableWidgetItem("{:,.2f}".format(price))
+            item_price.setTextAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
+            self.tbl_pro_products.setItem(i, 5, item_price)
+            self.tbl_pro_products.setItem(i, 6, QTableWidgetItem("{}".format(spec)))
+            self.tbl_pro_products.setItem(i, 7, QTableWidgetItem("{}".format(date)))
+
+            status_text = "เปิด" if state else "ปิด"
+            self.btn_pro_state.append(QtWidgets.QPushButton(status_text))
+            self.btn_pro_state[i].clicked.connect(partial(self.setSelectedProductState, i, pid))
+            self.tbl_pro_products.setCellWidget(i, 8, self.btn_pro_state[i])
+
+        self.tbl_pro_products.resizeRowsToContents()
+
+    def setupProductsTable(self):
+        # Update Found label
+        self.lbl_pro_found.setText("พบ {} รายการ".format(self.products_count))
+
+        # Table Widget
+        self.tbl_pro_products.setRowCount(0)  # Reset table
+        self.tbl_pro_products.setRowCount(self.products_count)
+        self.tbl_pro_products.setColumnCount(9)
+        self.tbl_pro_products.setEditTriggers(QtWidgets.QTableWidget.NoEditTriggers)  # Table Read-only
+
+        # สร้าง Header
+        header0 = QtWidgets.QTableWidgetItem("")
+        header1 = QtWidgets.QTableWidgetItem("PID")
+        header2 = QtWidgets.QTableWidgetItem("ชื่อ")
+        header3 = QtWidgets.QTableWidgetItem("รายละเอียด")
+        header4 = QtWidgets.QTableWidgetItem("ยี่ห้อ")
+        header5 = QtWidgets.QTableWidgetItem("ราคาต่อหน่วย")
+        header6 = QtWidgets.QTableWidgetItem("Spec")
+        header7 = QtWidgets.QTableWidgetItem("วันที่เพิ่ม")
+        header8 = QtWidgets.QTableWidgetItem("สถานะ")
+
+        # ใส่ Header ให้ Table
+        self.tbl_pro_products.setHorizontalHeaderItem(0, header0)
+        self.tbl_pro_products.setHorizontalHeaderItem(1, header1)
+        self.tbl_pro_products.setHorizontalHeaderItem(2, header2)
+        self.tbl_pro_products.setHorizontalHeaderItem(3, header3)
+        self.tbl_pro_products.setHorizontalHeaderItem(4, header4)
+        self.tbl_pro_products.setHorizontalHeaderItem(5, header5)
+        self.tbl_pro_products.setHorizontalHeaderItem(6, header6)
+        self.tbl_pro_products.setHorizontalHeaderItem(7, header7)
+        self.tbl_pro_products.setHorizontalHeaderItem(8, header8)
+
+        # ตั้งค่าความกว้าง column
+        self.tbl_pro_products.setColumnWidth(0, 30)
+        self.tbl_pro_products.horizontalHeader().setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeToContents)
+        self.tbl_pro_products.horizontalHeader().setSectionResizeMode(5, QtWidgets.QHeaderView.ResizeToContents)
+        self.tbl_pro_products.setColumnWidth(2, 150)
+        self.tbl_pro_products.setColumnWidth(3, 200)
+        self.tbl_pro_products.setColumnWidth(8, 50)
+
+    def searchProducts(self):
+        search_txt = self.txt_pro_search.text()
+        sortby = self.cmb_pro_sortby.currentIndex()
+
+        if search_txt != "":
+            con = {'$or': [{'name': {"$regex": f'{search_txt}',
+                                     "$options": "i"}},
+                           {'desc': {"$regex": f'{search_txt}',
+                                     "$options": "i"}},
+                           {'keyword': {"$regex": f'{search_txt}',
+                                        "$options": "i"}}
+                           ]}
+        else:
+            con = {}
+
+        if sortby == 1:
+            sort_con = ('name', pymongo.ASCENDING)
+        elif sortby == 2:
+            sort_con = ('name', pymongo.DESCENDING)
+        elif sortby == 3:
+            sort_con = ('date_added', pymongo.DESCENDING)
+        elif sortby == 4:
+            sort_con = ('price', pymongo.ASCENDING)
+        elif sortby == 5:
+            sort_con = ('price', pymongo.DESCENDING)
+        else:
+            sort_con = ('pid', pymongo.ASCENDING)
+
+        self.getProducts(con=con, sort=sort_con)
+        self.setupProductsTable()
+        self.addToProductsTable()
+
+    def getSelectedProduct(self, i, data):
+        self.lbl_pro_detail.setText("รายละเอียดสินค้า")
+        self.btn_pro_add.setText("แก้ไข")
+        self.setProductDetailFormEnabled(boolean=False)
+
+        for btn in self.btn_pro_view:
+            btn.setEnabled(True)
+        self.btn_pro_view[i].setEnabled(False)
+
+        self.current_pid = data[0]
+
+        self.txt_pro_name.setText(data[1])
+        self.txt_pro_desc.setText(data[2])
+        self.txt_pro_brand.setText(data[3])
+        self.txt_pro_price.setText("{:,.2f}".format(data[4]))
+        self.txt_pro_spec.setText(data[5])
+        cat_index = int(data[6][-2:])
+        self.cmb_pro_cat.setCurrentIndex(cat_index)
+
+    def setSelectedProductState(self, i, pid):
+        if self.btn_pro_state[i].text() == "เปิด":
+            self.btn_pro_state[i].setText("ปิด")
+            state = False
+        else:
+            self.btn_pro_state[i].setText("เปิด")
+            state = True
+        with GetDatabase() as conn:
+            db = conn.get_database('ucwb')
+            con = {'pid': pid}
+            found = db.products.count_documents(con)
+            if found:
+                setTo = {'$set': {'status': state}}
+                db.products.update_one(con, setTo)
+
+    def setProductDetailFormEnabled(self, boolean=True, disable_cat=True):
+        self.txt_pro_name.setReadOnly(not boolean)
+        self.txt_pro_desc.setReadOnly(not boolean)
+        self.txt_pro_brand.setReadOnly(not boolean)
+        self.txt_pro_price.setReadOnly(not boolean)
+        self.txt_pro_spec.setReadOnly(not boolean)
+        self.cmb_pro_cat.setEnabled(not disable_cat)
+
+    def clearProductDetailForm(self):
+        self.txt_pro_name.setText("")
+        self.txt_pro_desc.setText("")
+        self.txt_pro_brand.setText("")
+        self.txt_pro_price.setText("")
+        self.txt_pro_spec.setText("")
+        self.cmb_pro_cat.setCurrentIndex(0)
+
+    def productDetailBtnClicked(self):
+        if self.btn_pro_add.text() == "แก้ไข":
+            self.setProductDetailFormEnabled(boolean=True, disable_cat=True)
+            self.btn_pro_add.setText("บันทึก")
+        elif self.btn_pro_add.text() == "บันทึก":
+            msg = QMessageBox()
+            confirm = msg.question(msg, "แก้ไขข้อมูลสินค้า", "ยืนยันการแก้ไขข้อมูลสินค้า", msg.Yes | msg.No)
+            if confirm == msg.Yes:
+                self.updateProductDetail()
+        else:
+            self.addNewProduct()
+
+    def updateProductDetail(self):
+        msg = QMessageBox()
+        msg.setWindowTitle("แก้ไขข้อมูลสินค้า")
+        try:
+            pid = self.current_pid
+            name, desc, brand, price, spec, cat = self.getProductDetailFormData()
+
+            msg.setIcon(msg.Warning)
+            if not name:
+                msg.setText("กรุณาใส่ 'ชื่อสินค้า' ให้ถูกต้อง")
+                return
+            if not brand:
+                msg.setText("กรุณาใส่ 'ยี่ห้อ' ให้ถูกต้อง")
+                return
+            if not spec:
+                msg.setText("กรุณาใส่ 'Spec' ให้ถูกต้อง")
+                return
+            if cat == "100":
+                msg.setText("กรุณาเลือก 'ประเภทสินค้า' ให้ถูกต้อง")
+                return
+
+            with GetDatabase() as conn:
+                db = conn.get_database('ucwb')
+                con = {'pid': pid}
+                found = db.products.count_documents(con)
+                if found:
+                    setTo = {'$set': {'name': name,
+                                      'desc': desc,
+                                      'brand': brand,
+                                      'price': price,
+                                      'keyword': spec,
+                                      'cat': cat}}
+                    db.products.update_one(con, setTo)
+                    msg.setIcon(QMessageBox.Information)
+                    msg.setText("บันทึกรายละเอียดสินค้าสำเร็จ!")
+
+                    self.getProducts()  # Update Orders Table
+                    self.setupProductsTable()
+                    self.addToProductsTable()
+                    self.orderDetailCancel(ask=False)  # Cancel selected
+                    self.setProductDetailFormEnabled(boolean=False, disable_cat=False)
+                    self.clearProductDetailForm()
+                    self.lbl_pro_detail.setText("เพิ่มสินค้า")
+                    self.btn_pro_add.setText("เพิ่ม")
+                else:
+                    msg.setIcon(QMessageBox.Critical)
+                    msg.setText("Error: Product ID not found!")
+        except ValueError:
+            msg.setIcon(msg.Warning)
+            msg.setText("กรุณาใส่ 'ราคาต่อหน่วย' ให้ถูกต้อง")
+        finally:
+            msg.exec_()
+
+    def addNewProduct(self):
+        msg = QMessageBox()
+        msg.setWindowTitle("เพิ่มสินค้า")
+        confirm = msg.question(msg, "เพิ่มสินค้า", "ยืนยันการเพิ่มสินค้า", msg.Yes | msg.No)
+        if confirm == msg.Yes:
+            try:
+                name, desc, brand, price, spec, cat = self.getProductDetailFormData()
+
+                msg.setIcon(msg.Warning)
+                if not name:
+                    msg.setText("กรุณาใส่ 'ชื่อสินค้า' ให้ถูกต้อง")
+                    return
+                if not brand:
+                    msg.setText("กรุณาใส่ 'ยี่ห้อ' ให้ถูกต้อง")
+                    return
+                if not spec:
+                    msg.setText("กรุณาใส่ 'Spec' ให้ถูกต้อง")
+                    return
+                if cat == "100":
+                    msg.setText("กรุณาเลือก 'ประเภทสินค้า' ให้ถูกต้อง")
+                    return
+
+                with GetDatabase() as conn:
+                    db = conn.get_database('ucwb')
+                    count = db.products.count_documents({'cat': cat})
+                    db.products.insert_one({'pid': "{}{:04d}".format(cat, count + 1),
+                                            'name': name,
+                                            'desc': desc,
+                                            'brand': brand,
+                                            'price': price,
+                                            'keyword': spec,
+                                            'cat': cat,
+                                            'date_added': datetime.now(),
+                                            'status': True
+                                            })
+                    msg.setIcon(QMessageBox.Information)
+                    msg.setText("เพิ่มสินค้าสำเร็จ!")
+
+                    self.getProducts()  # Update Orders Table
+                    self.setupProductsTable()
+                    self.addToProductsTable()
+                    self.orderDetailCancel(ask=False)  # Cancel selected
+                    self.setProductDetailFormEnabled(boolean=False)
+                    self.clearProductDetailForm()
+            except ValueError:
+                msg.setIcon(msg.Warning)
+                msg.setText("กรุณาใส่ 'ราคาต่อหน่วย' ให้ถูกต้อง")
+            finally:
+                msg.exec_()
+
+    def getProductDetailFormData(self):
+        name = self.txt_pro_name.text().strip()
+        desc = self.txt_pro_desc.toPlainText().strip()
+        brand = self.txt_pro_brand.text().strip()
+        price = float(self.txt_pro_price.text().strip().replace(',', ''))
+        spec = self.txt_pro_spec.text().strip()
+        cat = str(100 + self.cmb_pro_cat.currentIndex())
+        return name, desc, brand, price, spec, cat
+
+    def productDetailCancel(self, ask=True):
+        def cancelAction():
+            self.lbl_pro_detail.setText("เพิ่มสินค้า")
+            self.btn_pro_add.setText("เพิ่ม")
+            self.clearProductDetailForm()
+            self.setProductDetailFormEnabled(boolean=True, disable_cat=False)
+            for btn in self.btn_pro_view:
+                btn.setEnabled(True)
+
+        if self.cmb_pro_cat.isEnabled():
+            check = self.txt_pro_name.text() + self.txt_pro_desc.toPlainText() + self.txt_pro_price.text() \
+                    + self.txt_pro_spec.text() + self.txt_pro_spec.text()
+            if check != "":
+                ask = True
+        if ask:
+            msg = QMessageBox()
+            ans = msg.question(msg, "ยกเลิกแก้ไขข้อมูล",
+                               "คุณแน่ใจที่จะต้องการเลิกแก้ไขข้อมูลใช่หรือไม่",
+                               msg.Yes | msg.No)
+            if ans == msg.Yes:
+                cancelAction()
+        else:
+            cancelAction()
+
+    ########## Products tab ends here ##########
+
+    ########## Customers tab starts here ##########
+
+    def getCustomers(self, con: dict = None, sort: tuple = None):
+        default_con = {'username': {'$ne': 'admin'}}
+        con = default_con if con is None else default_con | con
+        sort = ('username', pymongo.ASCENDING) if sort is None else sort
+        with GetDatabase() as conn:
+            db = conn.get_database('ucwb')
+            found = db.users.count_documents(con)
+            if found:
+                cursor = db.users.find(con).sort([sort])
+                self.customers = list(cursor)
+                self.customers_count = found
+            else:
+                self.customers = list()
+                self.customers_count = 0
+
+    def addToCustomersTable(self):
+        self.btn_cus_select = list()
+        cursor = self.customers
+        for i, v in enumerate(cursor):
+            username = v['username']
+            name = v['name']
+            tel = v['tel']
+            email = v['email']
+            j_date = str(v['joined_date'].replace(microsecond=0))
+            l_date = str(v['last_access'].replace(microsecond=0))
+
+            self.btn_cus_select.append(QtWidgets.QPushButton("เลือก"))
+            self.btn_cus_select[i].clicked.connect(partial(self.getSelectedCustomer, i, username))
+            self.tbl_cus_customers.setCellWidget(i, 0, self.btn_cus_select[i])
+
+            item = QTableWidgetItem("{}".format(username))
+            item.setFlags(item.flags() & ~QtCore.Qt.ItemIsEditable)
+            self.tbl_cus_customers.setItem(i, 1, item)
+            item = QTableWidgetItem("{}".format(name))
+            item.setFlags(item.flags() & ~QtCore.Qt.ItemIsEditable)
+            self.tbl_cus_customers.setItem(i, 2, item)
+            item = QTableWidgetItem("{}".format(tel))
+            item.setFlags(item.flags() & ~QtCore.Qt.ItemIsEditable)
+            self.tbl_cus_customers.setItem(i, 3, item)
+            item = QTableWidgetItem("{}".format(email))
+            item.setFlags(item.flags() & ~QtCore.Qt.ItemIsEditable)
+            self.tbl_cus_customers.setItem(i, 4, item)
+            item = QTableWidgetItem("{}".format(j_date))
+            item.setFlags(item.flags() & ~QtCore.Qt.ItemIsEditable)
+            self.tbl_cus_customers.setItem(i, 5, item)
+            item = QTableWidgetItem("{}".format(l_date))
+            item.setFlags(item.flags() & ~QtCore.Qt.ItemIsEditable)
+            self.tbl_cus_customers.setItem(i, 6, item)
+            # self.tbl_cus_customers.setItem(i, 1, QTableWidgetItem("{}".format(username)))
+            # self.tbl_cus_customers.setItem(i, 2, QTableWidgetItem("{}".format(name)))
+            # self.tbl_cus_customers.setItem(i, 3, QTableWidgetItem("{}".format(tel)))
+            # self.tbl_cus_customers.setItem(i, 4, QTableWidgetItem("{}".format(email)))
+            # self.tbl_cus_customers.setItem(i, 5, QTableWidgetItem("{}".format(j_date)))
+            # self.tbl_cus_customers.setItem(i, 6, QTableWidgetItem("{}".format(l_date)))
+
+        self.tbl_cus_customers.resizeRowsToContents()
+
+    def setupCustomersTable(self):
+        # Update Found label
+        self.lbl_cus_found.setText("พบ {} รายการ".format(self.customers_count))
+
+        # Table Widget
+        self.tbl_cus_customers.setRowCount(0)  # Reset table
+        self.tbl_cus_customers.setRowCount(self.customers_count)
+        self.tbl_cus_customers.setColumnCount(7)
+        # self.tbl_cus_customers.setEditTriggers(QtWidgets.QTableWidget.NoEditTriggers)  # Table Read-only
+
+        # สร้าง Header
+        header0 = QtWidgets.QTableWidgetItem("")
+        header1 = QtWidgets.QTableWidgetItem("Username")
+        header2 = QtWidgets.QTableWidgetItem("ชื่อ")
+        header3 = QtWidgets.QTableWidgetItem("โทรศัพท์")
+        header4 = QtWidgets.QTableWidgetItem("อีเมล")
+        header5 = QtWidgets.QTableWidgetItem("วันที่เข้าร่วม")
+        header6 = QtWidgets.QTableWidgetItem("Last Access")
+
+        # ใส่ Header ให้ Table
+        self.tbl_cus_customers.setHorizontalHeaderItem(0, header0)
+        self.tbl_cus_customers.setHorizontalHeaderItem(1, header1)
+        self.tbl_cus_customers.setHorizontalHeaderItem(2, header2)
+        self.tbl_cus_customers.setHorizontalHeaderItem(3, header3)
+        self.tbl_cus_customers.setHorizontalHeaderItem(4, header4)
+        self.tbl_cus_customers.setHorizontalHeaderItem(5, header5)
+        self.tbl_cus_customers.setHorizontalHeaderItem(6, header6)
+
+        # ตั้งค่าความกว้าง column
+        self.tbl_cus_customers.setColumnWidth(0, 50)
+        self.tbl_cus_customers.horizontalHeader().setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeToContents)
+        self.tbl_cus_customers.horizontalHeader().setSectionResizeMode(2, QtWidgets.QHeaderView.ResizeToContents)
+        self.tbl_cus_customers.horizontalHeader().setSectionResizeMode(3, QtWidgets.QHeaderView.ResizeToContents)
+        self.tbl_cus_customers.horizontalHeader().setSectionResizeMode(4, QtWidgets.QHeaderView.ResizeToContents)
+        self.tbl_cus_customers.horizontalHeader().setSectionResizeMode(5, QtWidgets.QHeaderView.Stretch)
+        self.tbl_cus_customers.horizontalHeader().setSectionResizeMode(6, QtWidgets.QHeaderView.Stretch)
+
+    def searchCustomers(self):
+        search_txt = self.txt_cus_search.text()
+        sortby = self.cmb_cus_sortby.currentIndex()
+
+        if search_txt != "":
+            con = {'$or': [{'username': {"$regex": f'{search_txt}',
+                                         "$options": "i"}},
+                           {'name': {"$regex": f'{search_txt}',
+                                     "$options": "i"}},
+                           {'tel': {"$regex": f'{search_txt}',
+                                    "$options": "i"}},
+                           {'email': {"$regex": f'{search_txt}',
+                                      "$options": "i"}}
+                           ]}
+        else:
+            con = {}
+
+        if sortby == 1:
+            sort_con = ('username', pymongo.DESCENDING)
+        elif sortby == 2:
+            sort_con = ('name', pymongo.ASCENDING)
+        elif sortby == 3:
+            sort_con = ('email', pymongo.ASCENDING)
+        elif sortby == 4:
+            sort_con = ('joined_date', pymongo.DESCENDING)
+        elif sortby == 5:
+            sort_con = ('last_access', pymongo.DESCENDING)
+        else:
+            sort_con = ('username', pymongo.ASCENDING)
+
+        self.getCustomers(con=con, sort=sort_con)
+        self.setupCustomersTable()
+        self.addToCustomersTable()
+
+    def getSelectedCustomer(self, row, username):
+        self.current_cus_username = username
+        self.current_cus_row = row
+        # print("{} {}".format(row, username))
+        self.btn_cus_edit.setEnabled(True)
+        self.btn_cus_view.setEnabled(True)
+        for btn in self.btn_cus_select:
+            btn.setEnabled(False)
+        font = QtGui.QFont()
+        font.setFamily("Kanit Light")
+        font.setBold(True)
+        font.setPointSize(11)
+        c1 = self.tbl_cus_customers.item(row, 2)
+        self.temp_cus_c1 = c1.text()
+        c1.setFlags(c1.flags() | QtCore.Qt.ItemIsEditable)
+        c1.setFont(font)
+        c2 = self.tbl_cus_customers.item(row, 3)
+        self.temp_cus_c2 = c2.text()
+        c2.setFlags(c2.flags() | QtCore.Qt.ItemIsEditable)
+        c2.setFont(font)
+        c3 = self.tbl_cus_customers.item(row, 4)
+        self.temp_cus_c3 = c3.text()
+        c3.setFlags(c3.flags() | QtCore.Qt.ItemIsEditable)
+        c3.setFont(font)
+
+    def cancelEditingCustomer(self):
+        msg = QMessageBox()
+        confirm = msg.question(msg, "แก้ไขข้อมูลลูกค้า",
+                               "ท่านต้องการ 'ยกเลิกแก้ไขข้อมูล' นี้ใช่หรือไม่", msg.Yes | msg.No)
+        if confirm == msg.Yes:
+            for btn in self.btn_cus_select:
+                btn.setEnabled(True)
+            row = self.current_cus_row
+            item = QTableWidgetItem("{}".format(self.temp_cus_c1))
+            item.setFlags(item.flags() & ~QtCore.Qt.ItemIsEditable)
+            self.tbl_cus_customers.setItem(row, 2, item)
+            item = QTableWidgetItem("{}".format(self.temp_cus_c2))
+            item.setFlags(item.flags() & ~QtCore.Qt.ItemIsEditable)
+            self.tbl_cus_customers.setItem(row, 3, item)
+            item = QTableWidgetItem("{}".format(self.temp_cus_c3))
+            item.setFlags(item.flags() & ~QtCore.Qt.ItemIsEditable)
+            self.tbl_cus_customers.setItem(row, 4, item)
+
+            self.btn_cus_edit.setEnabled(False)
+            self.btn_cus_view.setEnabled(False)
+
+    def updateSelectedCustomer(self):
+        username = self.current_cus_username
+        row = self.current_cus_row
+        c1 = self.tbl_cus_customers.item(row, 2)
+        c2 = self.tbl_cus_customers.item(row, 3)
+        c3 = self.tbl_cus_customers.item(row, 4)
+        name = c1.text()
+        tel = c2.text()
+        email = c3.text()
+
+        msg = QMessageBox()
+        confirm = msg.question(msg, "แก้ไขข้อมูลลูกค้า", "ยืนยันการแก้ไขข้อมูล", msg.Yes | msg.No)
+        if confirm == msg.Yes:
+            for btn in self.btn_cus_select:
+                btn.setEnabled(True)
+            with GetDatabase() as conn:
+                db = conn.get_database('ucwb')
+                con = {'username': username}
+                found = db.users.count_documents(con)
+                if found:
+                    setTo = {'$set': {'name': name,
+                                      'tel': tel,
+                                      'email': email
+                                      }}
+                    db.users.update_one(con, setTo)
+
+                    msg.setIcon(QMessageBox.Information)
+                    msg.setText("บันทึกข้อมูลลูกค้่าสำเร็จ!")
+                    msg.exec_()
+                    self.btn_cus_edit.setEnabled(False)
+                    self.btn_cus_view.setEnabled(False)
+                    item = QTableWidgetItem("{}".format(name))
+                    item.setFlags(item.flags() & ~QtCore.Qt.ItemIsEditable)
+                    self.tbl_cus_customers.setItem(row, 2, item)
+                    item = QTableWidgetItem("{}".format(tel))
+                    item.setFlags(item.flags() & ~QtCore.Qt.ItemIsEditable)
+                    self.tbl_cus_customers.setItem(row, 3, item)
+                    item = QTableWidgetItem("{}".format(email))
+                    item.setFlags(item.flags() & ~QtCore.Qt.ItemIsEditable)
+                    self.tbl_cus_customers.setItem(row, 4, item)
+
+    ########## Customers tab ends here ##########
+
+    ########## My Shop tab starts here ##########
+
+    ########## My Shop tab ends here ##########
+
+    ########## The others starts here ##########
 
     def loadLogo(self):
         logo_path = "resource/logo/ucwb-logo2.png"
@@ -1244,15 +1904,16 @@ class Ui_frm_admin_main(object):
         item.setText(_translate("frm_admin_main", "Date Added"))
         self.btn_pro_search.setText(_translate("frm_admin_main", "ค้นหา"))
         self.lbl_pro_found.setText(_translate("frm_admin_main", "พบ {0} รายการ"))
-        self.cmb_pro_sortby.setItemText(0, _translate("frm_admin_main", "..."))
-        self.cmb_pro_sortby.setItemText(1, _translate("frm_admin_main", "ชื่อ"))
-        self.cmb_pro_sortby.setItemText(2, _translate("frm_admin_main", "ล่าสุด"))
-        self.cmb_pro_sortby.setItemText(3, _translate("frm_admin_main", "ราคาสูงสุด"))
+        self.cmb_pro_sortby.setItemText(0, _translate("frm_admin_main", "PID"))
+        self.cmb_pro_sortby.setItemText(1, _translate("frm_admin_main", "ชื่อ A-Z"))
+        self.cmb_pro_sortby.setItemText(2, _translate("frm_admin_main", "ชื่อ Z-A"))
+        self.cmb_pro_sortby.setItemText(3, _translate("frm_admin_main", "ล่าสุด"))
         self.cmb_pro_sortby.setItemText(4, _translate("frm_admin_main", "ราคาต่ำสุด"))
+        self.cmb_pro_sortby.setItemText(5, _translate("frm_admin_main", "ราคาสูงสุด"))
         self.lbl_pro_sortby.setText(_translate("frm_admin_main", "Sort by"))
-        self.lbl_pro_detail.setText(_translate("frm_admin_main", "รายละเอียดสินค้า"))
+        self.lbl_pro_detail.setText(_translate("frm_admin_main", "เพิ่มสินค้า"))
         self.btn_pro_cancel.setText(_translate("frm_admin_main", "ยกเลิก"))
-        self.btn_pro_add.setText(_translate("frm_admin_main", "ยืนยัน"))
+        self.btn_pro_add.setText(_translate("frm_admin_main", "เพิ่ม"))
         self.lbl_pro_name.setText(_translate("frm_admin_main", "ชื่อ"))
         self.lbl_pro_desc.setText(_translate("frm_admin_main", "รายละเอียด"))
         self.lbl_pro_brand.setText(_translate("frm_admin_main", "ยี่ห้อ"))
@@ -1287,14 +1948,15 @@ class Ui_frm_admin_main(object):
         item.setText(_translate("frm_admin_main", "Last Access"))
         self.btn_cus_search.setText(_translate("frm_admin_main", "ค้นหา"))
         self.lbl_cus_found.setText(_translate("frm_admin_main", "พบ {0} รายการ"))
-        self.cmb_cus_sortby.setItemText(0, _translate("frm_admin_main", "..."))
-        self.cmb_cus_sortby.setItemText(1, _translate("frm_admin_main", "ชื่อ"))
-        self.cmb_cus_sortby.setItemText(2, _translate("frm_admin_main", "ล่าสุด"))
-        self.cmb_cus_sortby.setItemText(3, _translate("frm_admin_main", "ราคาสูงสุด"))
-        self.cmb_cus_sortby.setItemText(4, _translate("frm_admin_main", "ราคาต่ำสุด"))
+        self.cmb_cus_sortby.setItemText(0, _translate("frm_admin_main", "Username A-Z"))
+        self.cmb_cus_sortby.setItemText(1, _translate("frm_admin_main", "Username Z-A"))
+        self.cmb_cus_sortby.setItemText(2, _translate("frm_admin_main", "ชื่อ"))
+        self.cmb_cus_sortby.setItemText(3, _translate("frm_admin_main", "อีเมล"))
+        self.cmb_cus_sortby.setItemText(4, _translate("frm_admin_main", "วันที่เข้าร่วม"))
+        self.cmb_cus_sortby.setItemText(5, _translate("frm_admin_main", "Last Access"))
         self.lbl_cus_sortby.setText(_translate("frm_admin_main", "Sort by"))
-        self.btn_cus_view.setText(_translate("frm_admin_main", "ดูข้อมูล"))
-        self.btn_cus_edit.setText(_translate("frm_admin_main", "แก้ไขข้อมูล"))
+        self.btn_cus_view.setText(_translate("frm_admin_main", "ยกเลิก"))
+        self.btn_cus_edit.setText(_translate("frm_admin_main", "บันทึก"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_customers), _translate("frm_admin_main", "Customers"))
         self.btn_shop_changePwd.setText(_translate("frm_admin_main", "เปลี่ยนรหัสผ่าน"))
         self.lbl_shop_stat.setText(_translate("frm_admin_main", "สถิติร้านค้า"))
