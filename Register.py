@@ -10,6 +10,8 @@ from datetime import datetime
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 # from PyQt5.QtWidgets import QMessageBox
+from PyQt5.QtCore import QRegExp
+from PyQt5.QtGui import QRegExpValidator
 from PyQt5.QtWidgets import QInputDialog
 
 from ucwblib import GetDatabase, HashPassword, ICON_PATH, QMessageBox
@@ -170,16 +172,21 @@ class Ui_frm_register(object):
         self.retranslateUi(frm_register)
         QtCore.QMetaObject.connectSlotsByName(frm_register)
 
+        ###
+        self.txt_username.setValidator(QRegExpValidator(QRegExp("^[A-Za-z0-9_-]*$")))
+        self.txt_tel.setValidator(QRegExpValidator(QRegExp("^[0-9]{3}-[0-9]{3}-[0-9]{4}$")))
+        self.txt_email.setValidator(QRegExpValidator(QRegExp("^\\w+([\\.-]?\\w+)*@\\w+([\\.-]?\\w+)*(\\.\\w{2,3})+$")))
+
         # Event_Driven
         self.btn_register.clicked.connect(self.register)
         self.btn_cancel.clicked.connect(self.cancel)
 
     def register(self):
         try:
-            username = self.txt_username.text().lower()
-            name = self.txt_name.text().title()
-            tel = self.txt_tel.text()
-            email = self.txt_email.text().lower()
+            username = self.txt_username.text().strip().lower()
+            name = self.txt_name.text().strip().title()
+            tel = self.txt_tel.text().strip()
+            email = self.txt_email.text().strip().lower()
             password = self.txt_password.text()
             re_password = self.txt_repassword.text()
 

@@ -12,6 +12,8 @@ from functools import partial
 import pymongo
 import pyperclip
 from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5.QtCore import QRegExp
+from PyQt5.QtGui import QRegExpValidator
 from PyQt5.QtWidgets import QTableWidgetItem, QInputDialog, QLineEdit
 
 import CusPayment
@@ -274,6 +276,9 @@ class Ui_frm_cus_myorder(object):
         self.btn_showQR.setEnabled(False)
         self.btn_viewMore.setEnabled(False)
         self.btn_back.setEnabled(False)
+
+        self.txt_tel.setValidator(QRegExpValidator(QRegExp("^[0-9]{3}-[0-9]{3}-[0-9]{4}$")))
+        self.txt_email.setValidator(QRegExpValidator(QRegExp("^\\w+([\\.-]?\\w+)*@\\w+([\\.-]?\\w+)*(\\.\\w{2,3})+$")))
 
         self.getPriceSettings()
         self.getCusOrders()

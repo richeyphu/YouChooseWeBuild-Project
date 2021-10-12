@@ -19,15 +19,33 @@ import pyperclip
 from PIL import Image
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtCore import QTimer, QDateTime, QLocale
-from PyQt5.QtGui import QPixmap
-from PyQt5.QtWidgets import QTableWidgetItem
+from PyQt5.QtCore import QTimer, QDateTime, QLocale, QRegExp
+from PyQt5.QtGui import QPixmap, QIntValidator, QRegExpValidator
+from PyQt5.QtWidgets import QTableWidgetItem, QButtonGroup, QInputDialog, QLineEdit
 
-from ucwblib import GetDatabase, ICON_PATH_ADMIN, AdminQMessageBox as QMessageBox, getOrderStatus, getSettings
+from ucwblib import GetDatabase, ICON_PATH_ADMIN, AdminQMessageBox as QMessageBox, getOrderStatus, getSettings, \
+    HashPassword
 
 
 class Ui_frm_admin_main(object):
     def __init__(self):
+        self.customers_joined_date = list()
+        self.customers_username = list()
+        self.products_cat_count = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        self.btn_pro_state = list()
+        self.orders_status_count = [0, 0, 0, 0, 0, 0, 0]
+        self.orders_status_total = [0, 0, 0, 0, 0, 0, 0]
+        self.btn_ord_view = list()
+        self.username = "admin"
+        self.current_cus_row = None
+        self.current_cus_username = None
+        self.coupons_code_list = list()
+        self.current_coupon = None
+        self.btn_cp_state = list()
+        self.btn_cp_select = list()
+        self.coupons_count = 0
+        self.coupons = list()
+        self.payment_detail = None
         self.btn_cus_select = list()
         self.customers_count = 0
         self.customers = list()
@@ -547,7 +565,6 @@ class Ui_frm_admin_main(object):
         self.cmb_shop_viewStat.addItem("")
         self.cmb_shop_viewStat.addItem("")
         self.cmb_shop_viewStat.addItem("")
-        self.cmb_shop_viewStat.addItem("")
         self.line_shop_2 = QtWidgets.QFrame(self.tab_myShop)
         self.line_shop_2.setGeometry(QtCore.QRect(600, 10, 16, 551))
         self.line_shop_2.setFrameShape(QtWidgets.QFrame.VLine)
@@ -644,6 +661,12 @@ class Ui_frm_admin_main(object):
         self.rdo_shop_shippingYes.setFont(font)
         self.rdo_shop_shippingYes.setObjectName("rdo_shop_shippingYes")
         self.formLayout_settings.setWidget(1, QtWidgets.QFormLayout.FieldRole, self.rdo_shop_shippingYes)
+
+        # Shipping group
+        shipping_group = QButtonGroup(self.formLayoutWidget)
+        shipping_group.addButton(self.rdo_shop_shippingYes)
+        shipping_group.addButton(self.rdo_shop_shippingNo)
+
         self.txt_shop_shipping = QtWidgets.QLineEdit(self.formLayoutWidget)
         font = QtGui.QFont()
         font.setFamily("Kanit Light")
@@ -672,6 +695,12 @@ class Ui_frm_admin_main(object):
         self.rdo_shop_vatYes.setFont(font)
         self.rdo_shop_vatYes.setObjectName("rdo_shop_vatYes")
         self.formLayout_settings.setWidget(5, QtWidgets.QFormLayout.FieldRole, self.rdo_shop_vatYes)
+
+        # VAT group
+        vat_group = QButtonGroup(self.formLayoutWidget)
+        vat_group.addButton(self.rdo_shop_vatYes)
+        vat_group.addButton(self.rdo_shop_vatNo)
+
         self.txt_shop_vat = QtWidgets.QLineEdit(self.formLayoutWidget)
         font = QtGui.QFont()
         font.setFamily("Kanit Light")
@@ -814,7 +843,7 @@ class Ui_frm_admin_main(object):
         frm_admin_main.setTabOrder(self.btn_shop_cancelSettings, self.btn_shop_saveSettings)
         frm_admin_main.setTabOrder(self.btn_shop_saveSettings, self.btn_shop_exit)
 
-        ###
+        ##########
         # Clock label
         self.showTime()
         timer = QTimer(frm_admin_main)  # creating a timer object
@@ -828,6 +857,7 @@ class Ui_frm_admin_main(object):
         self.getOrders()
         self.setupOrdersTable()
         self.addToOrdersTable()
+
         self.cmb_ord_statusDetail.setEnabled(False)
         self.txt_ord_trackingNo.setEnabled(False)
 
@@ -849,6 +879,7 @@ class Ui_frm_admin_main(object):
         self.getCustomers()
         self.setupCustomersTable()
         self.addToCustomersTable()
+
         self.btn_cus_edit.setEnabled(False)
         self.btn_cus_view.setEnabled(False)
 
@@ -858,7 +889,30 @@ class Ui_frm_admin_main(object):
 
         # My Shop tab
         self.loadLogo()
+        self.getShopSettings()
+        self.setupSettingsForms()
+        self.getCoupons()
+        self.setupCouponsTable()
+        self.addToCouponsTable()
+        self.showStatTable()
 
+        self.txt_shop_shipping.setValidator(QIntValidator(0, 9999))
+        self.txt_shop_vat.setValidator(QRegExpValidator(QRegExp("\\b([0-9]|[1-9][0-9]|100)\\b")))
+        self.txt_shop_ppNum.setValidator(QRegExpValidator(QRegExp("^[0-9]{3}-[0-9]{3}-[0-9]{4}$")))
+        self.btn_shop_deleteCoupon.setEnabled(False)
+
+        self.rdo_shop_shippingNo.toggled.connect(self.shippingOptionNo)
+        self.rdo_shop_shippingYes.toggled.connect(self.shippingOptionYes)
+        self.rdo_shop_vatNo.toggled.connect(self.vatOptionNo)
+        self.rdo_shop_vatYes.toggled.connect(self.vatOptionYes)
+        self.cmb_shop_couponStatus.currentIndexChanged.connect(self.searchCoupons)
+        self.cmb_shop_viewStat.currentIndexChanged.connect(self.showStatTable)
+        self.btn_shop_saveCoupon.clicked.connect(self.addNewCoupon)
+        self.btn_shop_deleteCoupon.clicked.connect(self.deleteCoupon)
+        self.btn_shop_saveSettings.clicked.connect(self.saveShopSettings)
+        self.btn_shop_cancelSettings.clicked.connect(self.cancelShopSettings)
+        self.btn_shop_changePwd.clicked.connect(self.changePassword)
+        self.btn_shop_viewStat.clicked.connect(self.showStatTable)
         self.btn_shop_exit.clicked.connect(frm_admin_main.close)
 
         # main form
@@ -867,9 +921,9 @@ class Ui_frm_admin_main(object):
     ########## Orders tab starts here ##########
 
     def getOrders(self, con: dict = None):
+        con = {} if con is None else con
         with GetDatabase() as conn:
             db = conn.get_database('ucwb')
-            con = {} if con is None else con
             found = db.orders.count_documents(con)
             if found:
                 cursor = db.orders.find(con).sort('oid', pymongo.DESCENDING)
@@ -932,6 +986,8 @@ class Ui_frm_admin_main(object):
 
     def addToOrdersTable(self):
         self.btn_ord_view = list()
+        self.orders_status_total = [0, 0, 0, 0, 0, 0, 0]
+        self.orders_status_count = [0, 0, 0, 0, 0, 0, 0]
         try:
             for i, v in enumerate(self.orders):
                 oid = v['oid']
@@ -974,6 +1030,10 @@ class Ui_frm_admin_main(object):
                 item_status = QTableWidgetItem("{}".format(status))
                 item_status.setTextAlignment(QtCore.Qt.AlignCenter | QtCore.Qt.AlignVCenter)
                 self.tbl_ord_orders.setItem(i, 5, item_status)
+
+                # เก็บ Stat
+                self.orders_status_count[self.getOrderStatusCmbIndex(int(v['status']) - 1)] += 1
+                self.orders_status_total[self.getOrderStatusCmbIndex(int(v['status']) - 1)] += total
 
         except TypeError:
             pass  # เผื่อไว้ในกรณีที่ไม่มี Order
@@ -1107,7 +1167,8 @@ class Ui_frm_admin_main(object):
             self.btn_ord_update.setText("บันทึก")
             # self.txt_ord_trackingNo.setEnabled(True)
             self.cmb_ord_statusDetail.setEnabled(True)
-        else:
+            self.statusDetailChanged()
+        else:  # บันทึกข้อมูล
             msg = QMessageBox()
             ans = msg.question(msg, "บันทึกรายละเอียดคำสั่งซื้อ",
                                "คุณแน่ใจที่จะต้องการ 'บันทึกรายละเอียดคำสั่งซื้อ' นี้ใช่หรือไม่",
@@ -1286,6 +1347,7 @@ class Ui_frm_admin_main(object):
     def addToProductsTable(self):
         self.btn_pro_view = list()
         self.btn_pro_state = list()
+        self.products_cat_count = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
         cursor = self.products
         for i, v in enumerate(cursor):
             pid = v['pid']
@@ -1317,6 +1379,9 @@ class Ui_frm_admin_main(object):
             self.btn_pro_state.append(QtWidgets.QPushButton(status_text))
             self.btn_pro_state[i].clicked.connect(partial(self.setSelectedProductState, i, pid))
             self.tbl_pro_products.setCellWidget(i, 8, self.btn_pro_state[i])
+
+            # เก็บ Stat
+            self.products_cat_count[int(cat[-2:]) - 1] += 1
 
         self.tbl_pro_products.resizeRowsToContents()
 
@@ -1575,7 +1640,7 @@ class Ui_frm_admin_main(object):
             for btn in self.btn_pro_view:
                 btn.setEnabled(True)
 
-        if self.cmb_pro_cat.isEnabled():
+        if self.cmb_pro_cat.isEnabled() or self.btn_pro_add.text() == "บันทึก":
             check = self.txt_pro_name.text() + self.txt_pro_desc.toPlainText() + self.txt_pro_price.text() \
                     + self.txt_pro_spec.text() + self.txt_pro_spec.text()
             if check != "":
@@ -1611,6 +1676,8 @@ class Ui_frm_admin_main(object):
 
     def addToCustomersTable(self):
         self.btn_cus_select = list()
+        self.customers_username = list()
+        self.customers_joined_date = list()
         cursor = self.customers
         for i, v in enumerate(cursor):
             username = v['username']
@@ -1648,6 +1715,10 @@ class Ui_frm_admin_main(object):
             # self.tbl_cus_customers.setItem(i, 4, QTableWidgetItem("{}".format(email)))
             # self.tbl_cus_customers.setItem(i, 5, QTableWidgetItem("{}".format(j_date)))
             # self.tbl_cus_customers.setItem(i, 6, QTableWidgetItem("{}".format(l_date)))
+
+            # เก็บ Stat
+            self.customers_username.append(username)
+            self.customers_joined_date.append(v['joined_date'])
 
         self.tbl_cus_customers.resizeRowsToContents()
 
@@ -1795,7 +1866,7 @@ class Ui_frm_admin_main(object):
                     db.users.update_one(con, setTo)
 
                     msg.setIcon(QMessageBox.Information)
-                    msg.setText("บันทึกข้อมูลลูกค้่าสำเร็จ!")
+                    msg.setText("บันทึกข้อมูลลูกค้าสำเร็จ!")
                     msg.exec_()
                     self.btn_cus_edit.setEnabled(False)
                     self.btn_cus_view.setEnabled(False)
@@ -1812,6 +1883,464 @@ class Ui_frm_admin_main(object):
     ########## Customers tab ends here ##########
 
     ########## My Shop tab starts here ##########
+
+    def getShopSettings(self):
+        settings = getSettings()
+        self.shipping_fee = settings['shipping_fee']
+        self.tax_rate = settings['tax_rate']
+        self.payment_detail = settings['payment_detail']
+
+    def setupSettingsForms(self):
+        shipping = str(self.shipping_fee)
+        vat = str(self.tax_rate)
+        pp = self.payment_detail
+        if shipping == '0':
+            self.rdo_shop_shippingNo.setChecked(True)
+            self.txt_shop_shipping.setEnabled(False)
+        else:
+            self.rdo_shop_shippingYes.setChecked(True)
+            self.txt_shop_shipping.setEnabled(True)
+        if vat == '0':
+            self.rdo_shop_vatNo.setChecked(True)
+            self.txt_shop_vat.setEnabled(False)
+        else:
+            self.rdo_shop_vatYes.setChecked(True)
+            self.txt_shop_vat.setEnabled(True)
+        self.txt_shop_shipping.setText(shipping)
+        self.txt_shop_vat.setText(vat)
+        self.txt_shop_ppNum.setText(pp['acc_no'])
+        self.txt_shop_ppName.setText(pp['acc_name'])
+
+    def shippingOptionNo(self):
+        self.txt_shop_shipping.setEnabled(False)
+        self.txt_shop_shipping.setText("0")
+
+    def shippingOptionYes(self):
+        self.txt_shop_shipping.setEnabled(True)
+
+    def vatOptionNo(self):
+        self.txt_shop_vat.setEnabled(False)
+        self.txt_shop_vat.setText("0")
+
+    def vatOptionYes(self):
+        self.txt_shop_vat.setEnabled(True)
+
+    def saveShopSettings(self):
+        msg = QMessageBox()
+        confirm = msg.question(msg, "การตั้งค่าร้านค้า", "ยืนยันบันทึกการตั้งค่า", msg.Yes | msg.No)
+        if confirm == msg.Yes:
+            shipping_fee = int(self.txt_shop_shipping.text())
+            tax_rate = int(self.txt_shop_vat.text())
+            acc_no = self.txt_shop_ppNum.text()
+            acc_name = self.txt_shop_ppName.text()
+
+            with GetDatabase() as conn:
+                db = conn.get_database('ucwb')
+
+                con = {'name': 'shipping_fee'}
+                setTo = {'$set': {'value': shipping_fee}}
+                db.settings.update_one(con, setTo)
+                con = {'name': 'tax_rate'}
+                setTo = {'$set': {'value': tax_rate}}
+                db.settings.update_one(con, setTo)
+                con = {'name': 'payment_detail'}
+                setTo = {'$set': {'value': {'acc_no': acc_no,
+                                            'acc_name': acc_name}}}
+                db.settings.update_one(con, setTo)
+
+                self.getShopSettings()
+                self.setupSettingsForms()
+                msg.setIcon(QMessageBox.Information)
+                msg.setText("บันทึกการตั้งค่าสำเร็จ!")
+                msg.exec_()
+
+    def cancelShopSettings(self):
+        msg = QMessageBox()
+        confirm = msg.question(msg, "การตั้งค่าร้านค้า", "ท่านต้องการ 'ยกเลิกการตั้งค่า' ใช่หรือไม่", msg.Yes | msg.No)
+        if confirm == msg.Yes:
+            self.setupSettingsForms()
+
+    def getCoupons(self, con: dict = None):
+        con = {} if con is None else con
+        with GetDatabase() as conn:
+            db = conn.get_database('ucwb')
+            found = db.coupons.count_documents(con)
+            if found:
+                cursor = db.coupons.find(con).sort('code', pymongo.ASCENDING)
+                self.coupons = list(cursor)
+                self.coupons_count = found
+            else:
+                self.coupons = list()
+                self.coupons_count = 0
+
+    def addToCouponsTable(self):
+        self.btn_cp_select = list()
+        self.btn_cp_state = list()
+        self.coupons_code_list = list()
+        cursor = self.coupons
+        for i, v in enumerate(cursor):
+            code = v['code']
+            self.coupons_code_list.append(code)
+            name = v['name']
+            value = v['value']
+            state = v['status']
+
+            self.btn_cp_select.append(QtWidgets.QPushButton("เลือก"))
+            self.btn_cp_select[i].clicked.connect(partial(self.getSelectedCoupon, i, code))
+            self.tbl_shop_coupons.setCellWidget(i, 0, self.btn_cp_select[i])
+
+            self.tbl_shop_coupons.setItem(i, 1, QTableWidgetItem("{}".format(code)))
+            self.tbl_shop_coupons.setItem(i, 2, QTableWidgetItem("{}".format(name)))
+            item_price = QTableWidgetItem("{:,.2f}".format(value))
+            item_price.setTextAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
+            self.tbl_shop_coupons.setItem(i, 3, item_price)
+
+            status_text = "เปิด" if state else "ปิด"
+            self.btn_cp_state.append(QtWidgets.QPushButton(status_text))
+            self.btn_cp_state[i].clicked.connect(partial(self.setSelectedCouponState, i, code))
+            self.tbl_shop_coupons.setCellWidget(i, 4, self.btn_cp_state[i])
+
+        self.tbl_shop_coupons.resizeRowsToContents()
+
+    def setupCouponsTable(self):
+        # Table Widget
+        self.tbl_shop_coupons.setRowCount(0)  # Reset table
+        self.tbl_shop_coupons.setRowCount(self.coupons_count)
+        self.tbl_shop_coupons.setColumnCount(5)
+        self.tbl_shop_coupons.setEditTriggers(QtWidgets.QTableWidget.NoEditTriggers)  # Table Read-only
+
+        # สร้าง Header
+        header0 = QtWidgets.QTableWidgetItem("")
+        header1 = QtWidgets.QTableWidgetItem("Code")
+        header2 = QtWidgets.QTableWidgetItem("คำอธิบาย")
+        header3 = QtWidgets.QTableWidgetItem("มูลค่า")
+        header4 = QtWidgets.QTableWidgetItem("สถานะ")
+
+        # ใส่ Header ให้ Table
+        self.tbl_shop_coupons.setHorizontalHeaderItem(0, header0)
+        self.tbl_shop_coupons.setHorizontalHeaderItem(1, header1)
+        self.tbl_shop_coupons.setHorizontalHeaderItem(2, header2)
+        self.tbl_shop_coupons.setHorizontalHeaderItem(3, header3)
+        self.tbl_shop_coupons.setHorizontalHeaderItem(4, header4)
+
+        # ตั้งค่าความกว้าง column
+        self.tbl_shop_coupons.setColumnWidth(0, 50)
+        self.tbl_shop_coupons.horizontalHeader().setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeToContents)
+        self.tbl_shop_coupons.horizontalHeader().setSectionResizeMode(2, QtWidgets.QHeaderView.Stretch)
+        self.tbl_shop_coupons.horizontalHeader().setSectionResizeMode(3, QtWidgets.QHeaderView.ResizeToContents)
+        self.tbl_shop_coupons.setColumnWidth(4, 50)
+
+    def searchCoupons(self):
+        status = self.cmb_shop_couponStatus.currentIndex()
+        if status == 1:
+            status = True
+        elif status == 2:
+            status = False
+        else:
+            status = None
+        con = {'status': status} if status is not None else {}
+        self.getCoupons(con=con)
+        self.setupCouponsTable()
+        self.addToCouponsTable()
+
+    def getSelectedCoupon(self, i, code):
+        self.current_coupon = code
+        self.btn_shop_saveCoupon.setText("ยกเลิก")
+        for btn in self.btn_cp_select:
+            btn.setEnabled(True)
+        self.btn_cp_select[i].setEnabled(False)
+        self.btn_shop_deleteCoupon.setEnabled(True)
+
+    def setSelectedCouponState(self, i, code):
+        if self.btn_cp_state[i].text() == "เปิด":
+            self.btn_cp_state[i].setText("ปิด")
+            state = False
+        else:
+            self.btn_cp_state[i].setText("เปิด")
+            state = True
+        with GetDatabase() as conn:
+            db = conn.get_database('ucwb')
+            con = {'code': code}
+            found = db.coupons.count_documents(con)
+            if found:
+                setTo = {'$set': {'status': state}}
+                db.coupons.update_one(con, setTo)
+
+    def addNewCoupon(self):
+        if self.btn_shop_saveCoupon.text() == "เพิ่มคูปอง":
+            msg = QMessageBox()
+            win_title = "เพิ่มคูปอง"
+            msg.setWindowTitle(win_title)
+            msg.setIcon(msg.Warning)
+            while True:
+                code, ok = QInputDialog.getText(frm_admin_main, win_title, "กรุณากรอก 'Code' คูปอง")
+                if ok:
+                    code = code.strip().upper()
+                    if code in self.coupons_code_list:
+                        msg.setText("ไม่สามารถใช้ Code นี้ได้")
+                        msg.exec_()
+                        continue
+                    else:
+                        name, ok = QInputDialog.getText(frm_admin_main, win_title, "กรุณากรอก 'คำอธิบาย' คูปอง")
+                        if ok:
+                            name = name.strip()
+                            while True:
+                                value, ok = QInputDialog.getText(frm_admin_main, win_title, "กรุณากรอก 'มูลค่า' คูปอง")
+                                if ok:
+                                    value = value.strip().replace(',', '')
+                                    try:
+                                        value = float(value)
+                                        break
+                                    except ValueError:
+                                        msg.setText("กรุณากรอก 'มูลค่า' คูปองให้ถูกต้อง")
+                                        msg.exec_()
+                                else:
+                                    break
+                            confirm = msg.question(msg, win_title,
+                                                   "ยืนยันการเพิ่มคูปอง\n\nCode\t: {}\nคำอธิบาย\t: {}\nมูลค่า\t: {:,.2f}".format(
+                                                       code, name, value), msg.Yes | msg.No)
+                            if confirm == msg.Yes:
+                                with GetDatabase() as conn:
+                                    db = conn.get_database('ucwb')
+                                    db.coupons.insert_one({'name': name,
+                                                           'code': code,
+                                                           'value': value,
+                                                           'status': True
+                                                           })
+                                    msg.setIcon(QMessageBox.Information)
+                                    msg.setText("เพิ่มคูปองสำเร็จ!")
+                                    msg.exec_()
+                                    self.searchCoupons()
+                break
+        else:
+            self.btn_shop_saveCoupon.setText("เพิ่มคูปอง")
+            self.btn_shop_deleteCoupon.setEnabled(False)
+            for btn in self.btn_cp_select:
+                btn.setEnabled(True)
+
+    def deleteCoupon(self):
+        msg = QMessageBox()
+        win_title = "ลบคูปอง"
+        msg.setWindowTitle(win_title)
+        confirm = msg.question(msg, win_title, "ท่านต้องการลบคูปอง '{}'\nใช่หรือไม่".format(self.current_coupon),
+                               msg.Yes | msg.No)
+        if confirm == msg.Yes:
+            with GetDatabase() as conn:
+                db = conn.get_database('ucwb')
+                con = {'code': self.current_coupon}
+                db.coupons.delete_one(con)
+                msg.setIcon(QMessageBox.Information)
+                msg.setText("ลบคูปองสำเร็จ!")
+                msg.exec_()
+
+                self.btn_shop_deleteCoupon.setEnabled(False)
+                self.btn_shop_saveCoupon.setText("เพิ่มคูปอง")
+                self.searchCoupons()
+
+    def showStatTable(self):
+        view = self.cmb_shop_viewStat.currentIndex()
+        if view == 0:
+            self.setupStatTable_overview()
+            self.addToStatTable_overview()
+        elif view == 1:
+            self.setupStatTable_ord()
+            self.addToStatTable_ord()
+        elif view == 2:
+            self.setupStatTable_pro()
+            self.addToStatTable_pro()
+        else:
+            self.setupStatTable_cus()
+            self.addToStatTable_cus()
+
+    def addToStatTable_overview(self):
+        self.tbl_shop_stat.setItem(0, 0, QTableWidgetItem("คำสั่งซื้อ"))
+        item = QTableWidgetItem("{:,}".format(self.orders_count))
+        item.setTextAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
+        self.tbl_shop_stat.setItem(0, 1, item)
+
+        self.tbl_shop_stat.setItem(1, 0, QTableWidgetItem("สินค้า"))
+        item = QTableWidgetItem("{:,}".format(self.products_count))
+        item.setTextAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
+        self.tbl_shop_stat.setItem(1, 1, item)
+
+        self.tbl_shop_stat.setItem(2, 0, QTableWidgetItem("ลูกค้า"))
+        item = QTableWidgetItem("{:,}".format(self.customers_count))
+        item.setTextAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
+        self.tbl_shop_stat.setItem(2, 1, item)
+
+    def setupStatTable_overview(self):
+        # Table Widget
+        self.tbl_shop_stat.setRowCount(0)  # Reset row
+        self.tbl_shop_stat.setColumnCount(0)  # Reset column
+        self.tbl_shop_stat.setRowCount(3)
+        self.tbl_shop_stat.setColumnCount(2)
+        self.tbl_shop_stat.setEditTriggers(QtWidgets.QTableWidget.NoEditTriggers)  # Table Read-only
+
+        # สร้าง Header
+        header0 = QtWidgets.QTableWidgetItem("รายการ")
+        header1 = QtWidgets.QTableWidgetItem("จำนวน")
+
+        # ใส่ Header ให้ Table
+        self.tbl_shop_stat.setHorizontalHeaderItem(0, header0)
+        self.tbl_shop_stat.setHorizontalHeaderItem(1, header1)
+
+        # ตั้งค่าความกว้าง column
+        self.tbl_shop_stat.horizontalHeader().setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
+        self.tbl_shop_stat.horizontalHeader().setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
+
+    def addToStatTable_ord(self):
+        names = ['รอการชำระเงิน', 'รอแจ้งชำระเงิน', 'กำลังตรวจสอบ', 'รอการจัดส่ง', 'จัดส่งแล้ว', 'ยกเลิกแล้ว',
+                 'ไม่ผ่านการตรวจสอบ']
+        counts = self.orders_status_count
+        totals = self.orders_status_total
+
+        for i in range(len(names)):
+            name = names[i]
+            count = counts[i]
+            total = totals[i]
+
+            self.tbl_shop_stat.setItem(i, 0, QTableWidgetItem("{}".format(name)))
+
+            item = QTableWidgetItem("{:,}".format(count))
+            item.setTextAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
+            self.tbl_shop_stat.setItem(i, 1, item)
+
+            item = QTableWidgetItem("{:,.2f}".format(total))
+            item.setTextAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
+            self.tbl_shop_stat.setItem(i, 2, item)
+
+    def setupStatTable_ord(self):
+        # Table Widget
+        self.tbl_shop_stat.setRowCount(0)  # Reset row
+        self.tbl_shop_stat.setColumnCount(0)  # Reset column
+        self.tbl_shop_stat.setRowCount(len(self.orders_status_count))
+        self.tbl_shop_stat.setColumnCount(3)
+        self.tbl_shop_stat.setEditTriggers(QtWidgets.QTableWidget.NoEditTriggers)  # Table Read-only
+
+        # สร้าง Header
+        header0 = QtWidgets.QTableWidgetItem("รายการ")
+        header1 = QtWidgets.QTableWidgetItem("จำนวน")
+        header2 = QtWidgets.QTableWidgetItem("มูลค่ารวม")
+
+        # ใส่ Header ให้ Table
+        self.tbl_shop_stat.setHorizontalHeaderItem(0, header0)
+        self.tbl_shop_stat.setHorizontalHeaderItem(1, header1)
+        self.tbl_shop_stat.setHorizontalHeaderItem(2, header2)
+
+        # ตั้งค่าความกว้าง column
+        self.tbl_shop_stat.horizontalHeader().setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
+        self.tbl_shop_stat.horizontalHeader().setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
+        self.tbl_shop_stat.horizontalHeader().setSectionResizeMode(2, QtWidgets.QHeaderView.Stretch)
+
+    def addToStatTable_pro(self):
+        names = ['CPU', 'Mainboard', 'VGA Card', 'Memory', 'Harddisk', 'Solid State Drive', 'Power Supply', 'Case',
+                 'CPU Cooler', 'Monitor']
+        counts = self.products_cat_count
+
+        for i in range(len(names)):
+            name = names[i]
+            count = counts[i]
+
+            self.tbl_shop_stat.setItem(i, 0, QTableWidgetItem("{}".format(name)))
+
+            item = QTableWidgetItem("{:,}".format(count))
+            item.setTextAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
+            self.tbl_shop_stat.setItem(i, 1, item)
+
+    def setupStatTable_pro(self):
+        # Table Widget
+        self.tbl_shop_stat.setRowCount(0)  # Reset row
+        self.tbl_shop_stat.setColumnCount(0)  # Reset column
+        self.tbl_shop_stat.setRowCount(len(self.products_cat_count))
+        self.tbl_shop_stat.setColumnCount(2)
+        self.tbl_shop_stat.setEditTriggers(QtWidgets.QTableWidget.NoEditTriggers)  # Table Read-only
+
+        # สร้าง Header
+        header0 = QtWidgets.QTableWidgetItem("รายการ")
+        header1 = QtWidgets.QTableWidgetItem("จำนวน")
+
+        # ใส่ Header ให้ Table
+        self.tbl_shop_stat.setHorizontalHeaderItem(0, header0)
+        self.tbl_shop_stat.setHorizontalHeaderItem(1, header1)
+
+        # ตั้งค่าความกว้าง column
+        self.tbl_shop_stat.horizontalHeader().setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
+        self.tbl_shop_stat.horizontalHeader().setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
+
+    def addToStatTable_cus(self):
+        usernames = self.customers_username
+        dates = self.customers_joined_date
+
+        for i in range(len(usernames)):
+            username = usernames[i]
+            date = dates[i]
+            days = datetime.now() - date
+            days = str(days).split('.')[0]
+
+            self.tbl_shop_stat.setItem(i, 0, QTableWidgetItem("{}".format(username)))
+            self.tbl_shop_stat.setItem(i, 1, QTableWidgetItem("{}".format(days)))
+
+    def setupStatTable_cus(self):
+        # Table Widget
+        self.tbl_shop_stat.setRowCount(0)  # Reset row
+        self.tbl_shop_stat.setColumnCount(0)  # Reset column
+        self.tbl_shop_stat.setRowCount(len(self.customers_username))
+        self.tbl_shop_stat.setColumnCount(2)
+        self.tbl_shop_stat.setEditTriggers(QtWidgets.QTableWidget.NoEditTriggers)  # Table Read-only
+
+        # สร้าง Header
+        header0 = QtWidgets.QTableWidgetItem("รายการ")
+        header1 = QtWidgets.QTableWidgetItem("วันที่เป็นสมาชิก")
+
+        # ใส่ Header ให้ Table
+        self.tbl_shop_stat.setHorizontalHeaderItem(0, header0)
+        self.tbl_shop_stat.setHorizontalHeaderItem(1, header1)
+
+        # ตั้งค่าความกว้าง column
+        self.tbl_shop_stat.horizontalHeader().setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
+        self.tbl_shop_stat.horizontalHeader().setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
+
+    def changePassword(self):
+        win_title = "เปลี่ยนรหัสผ่าน"
+        msg = QMessageBox()
+        msg.setWindowTitle(win_title)
+        old_pwd, ok = QInputDialog.getText(frm_admin_main, win_title, "กรุณากรอกรหัสผ่านเดิม",
+                                           QLineEdit.Password)
+        if ok:
+            with GetDatabase() as conn:
+                db = conn.get_database('ucwb')
+                condition = {'username': self.username}
+                found = db.users.count_documents(condition)
+                if found:
+                    cursor = db.users.find(condition)
+                    # password จาก database
+                    pwd_chunk = HashPassword(cursor[0]['password'])
+                    salt = pwd_chunk.getSaltFromChunk()
+                    key = pwd_chunk.getKeyFromChunk()
+                    # password ที่เพิ่งกรอก
+                    pwd = HashPassword(old_pwd).getHashedKey(salt)
+                    if key != pwd:
+                        msg.setIcon(msg.Critical)
+                        msg.setText("รหัสผ่านไม่ถูกต้อง")
+                        msg.exec_()
+                    else:
+                        new_pwd, ok = QInputDialog.getText(frm_admin_main, win_title, "กรุณากรอกรหัสผ่านใหม่",
+                                                           QLineEdit.Password)
+                        if ok:
+                            renew_pwd, ok = QInputDialog.getText(frm_admin_main, win_title,
+                                                                 "กรุณากรอกรหัสผ่านใหม่อีกครั้ง", QLineEdit.Password)
+                            if new_pwd != renew_pwd:
+                                msg.setIcon(msg.Warning)
+                                msg.setText("รหัสผ่านไม่ตรงกัน\nกรุณาลองใหม่อีกครั้ง")
+                                msg.exec_()
+                            else:
+                                # เปลี่ยน password ใหม่
+                                hashed_pwd = HashPassword(new_pwd)
+                                setTo = {'$set': {'password': hashed_pwd.getSaltAndHashChunk()}}
+                                db.users.update_one(condition, setTo)
+                                msg.setIcon(msg.Information)
+                                msg.setText("เปลี่ยนรหัสผ่านใหม่สำเร็จ")
+                                msg.exec_()
 
     ########## My Shop tab ends here ##########
 
@@ -1961,16 +2490,15 @@ class Ui_frm_admin_main(object):
         self.btn_shop_changePwd.setText(_translate("frm_admin_main", "เปลี่ยนรหัสผ่าน"))
         self.lbl_shop_stat.setText(_translate("frm_admin_main", "สถิติร้านค้า"))
         self.btn_shop_viewStat.setText(_translate("frm_admin_main", "ดู"))
-        self.cmb_shop_viewStat.setItemText(0, _translate("frm_admin_main", "..."))
-        self.cmb_shop_viewStat.setItemText(1, _translate("frm_admin_main", "ชื่อ"))
-        self.cmb_shop_viewStat.setItemText(2, _translate("frm_admin_main", "ล่าสุด"))
-        self.cmb_shop_viewStat.setItemText(3, _translate("frm_admin_main", "ราคาสูงสุด"))
-        self.cmb_shop_viewStat.setItemText(4, _translate("frm_admin_main", "ราคาต่ำสุด"))
+        self.cmb_shop_viewStat.setItemText(0, _translate("frm_admin_main", "ภาพรวม"))
+        self.cmb_shop_viewStat.setItemText(1, _translate("frm_admin_main", "คำสั่งซื้อ"))
+        self.cmb_shop_viewStat.setItemText(2, _translate("frm_admin_main", "สินค้า"))
+        self.cmb_shop_viewStat.setItemText(3, _translate("frm_admin_main", "ลูกค้า"))
         self.lbl_shop_settings.setText(_translate("frm_admin_main", "การตั้งค่าร้านค้า"))
         self.btn_shop_exit.setText(_translate("frm_admin_main", "ออกจากระบบ"))
         self.lbl_shop_coupons.setText(_translate("frm_admin_main", "จัดการคูปอง"))
-        self.btn_shop_saveCoupon.setText(_translate("frm_admin_main", "บันทึกคูปอง"))
-        self.cmb_shop_couponStatus.setItemText(0, _translate("frm_admin_main", "..."))
+        self.btn_shop_saveCoupon.setText(_translate("frm_admin_main", "เพิ่มคูปอง"))
+        self.cmb_shop_couponStatus.setItemText(0, _translate("frm_admin_main", "แสดงทั้งหมด"))
         self.cmb_shop_couponStatus.setItemText(1, _translate("frm_admin_main", "เปิดใช้งาน"))
         self.cmb_shop_couponStatus.setItemText(2, _translate("frm_admin_main", "ปิดใช้งาน"))
         self.lbl_shop_couponStatus.setText(_translate("frm_admin_main", "สถานะ"))
