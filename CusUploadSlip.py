@@ -151,15 +151,16 @@ class Ui_frm_cus_uploadslip(object):
 
     def confirm(self):
         msg = QMessageBox()
-        ans = msg.question(msg, "Upload Slip", "ยืนยันการอัปโหลดไฟล์", msg.Yes | msg.No)
-        if ans == msg.Yes:
-            try:
+        msg.setWindowTitle("Upload Slip")
+        msg.setIcon(msg.Warning)
+        if self.filepath is None:
+            msg.setText("กรุณาเลือกไฟล์ที่ต้องการจะอัปโหลด")
+            msg.exec_()
+        else:
+            ans = msg.question(msg, "Upload Slip", "ยืนยันการอัปโหลดไฟล์", msg.Yes | msg.No)
+            if ans == msg.Yes:
                 self.uploadSlip()
-            except AttributeError:
-                msg.setWindowTitle("Upload Slip")
-                msg.setIcon(msg.Warning)
-                msg.setText("กรุณาเลือกไฟล์ที่ต้องการจะอัปโหลด")
-            frm_cus_uploadslip.hide()
+                frm_cus_uploadslip.hide()
 
     def uploadSlip(self):
         msg = QMessageBox()

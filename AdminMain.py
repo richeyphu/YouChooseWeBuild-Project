@@ -9,6 +9,7 @@
 
 
 import os
+import re
 from datetime import datetime
 
 from functools import partial
@@ -24,11 +25,15 @@ from PyQt5.QtGui import QPixmap, QIntValidator, QRegExpValidator
 from PyQt5.QtWidgets import QTableWidgetItem, QButtonGroup, QInputDialog, QLineEdit
 
 from ucwblib import GetDatabase, ICON_PATH_ADMIN, AdminQMessageBox as QMessageBox, getOrderStatus, getSettings, \
-    HashPassword
+    HashPassword, REGEX_TEL, REGEX_INT_0_100, REGEX_PASSWORD
 
 
 class Ui_frm_admin_main(object):
     def __init__(self):
+        self.username = "admin"
+        self.customers_count_all = 0
+        self.products_count_all = 0
+        self.orders_count_all = 0
         self.customers_joined_date = list()
         self.customers_username = list()
         self.products_cat_count = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
@@ -36,7 +41,6 @@ class Ui_frm_admin_main(object):
         self.orders_status_count = [0, 0, 0, 0, 0, 0, 0]
         self.orders_status_total = [0, 0, 0, 0, 0, 0, 0]
         self.btn_ord_view = list()
-        self.username = "admin"
         self.current_cus_row = None
         self.current_cus_username = None
         self.coupons_code_list = list()
@@ -853,7 +857,8 @@ class Ui_frm_admin_main(object):
         # Event-Driven
         # Orders tab
         self.setOrderDetailBtnEnabled(boolean=False)
-        self.getPriceSettings()
+        # self.getPriceSettings()
+        self.getShopSettings()
         self.getOrders()
         self.setupOrdersTable()
         self.addToOrdersTable()
@@ -889,16 +894,17 @@ class Ui_frm_admin_main(object):
 
         # My Shop tab
         self.loadLogo()
-        self.getShopSettings()
+        # self.getShopSettings()
         self.setupSettingsForms()
         self.getCoupons()
         self.setupCouponsTable()
         self.addToCouponsTable()
-        self.showStatTable()
+        self.loadAllStats()
+        self.showStatsTable()
 
         self.txt_shop_shipping.setValidator(QIntValidator(0, 9999))
-        self.txt_shop_vat.setValidator(QRegExpValidator(QRegExp("\\b([0-9]|[1-9][0-9]|100)\\b")))
-        self.txt_shop_ppNum.setValidator(QRegExpValidator(QRegExp("^[0-9]{3}-[0-9]{3}-[0-9]{4}$")))
+        self.txt_shop_vat.setValidator(QRegExpValidator(QRegExp(REGEX_INT_0_100)))
+        self.txt_shop_ppNum.setValidator(QRegExpValidator(QRegExp(REGEX_TEL)))
         self.btn_shop_deleteCoupon.setEnabled(False)
 
         self.rdo_shop_shippingNo.toggled.connect(self.shippingOptionNo)
@@ -906,13 +912,13 @@ class Ui_frm_admin_main(object):
         self.rdo_shop_vatNo.toggled.connect(self.vatOptionNo)
         self.rdo_shop_vatYes.toggled.connect(self.vatOptionYes)
         self.cmb_shop_couponStatus.currentIndexChanged.connect(self.searchCoupons)
-        self.cmb_shop_viewStat.currentIndexChanged.connect(self.showStatTable)
+        self.cmb_shop_viewStat.currentIndexChanged.connect(self.showStatsTable)
         self.btn_shop_saveCoupon.clicked.connect(self.addNewCoupon)
         self.btn_shop_deleteCoupon.clicked.connect(self.deleteCoupon)
         self.btn_shop_saveSettings.clicked.connect(self.saveShopSettings)
         self.btn_shop_cancelSettings.clicked.connect(self.cancelShopSettings)
         self.btn_shop_changePwd.clicked.connect(self.changePassword)
-        self.btn_shop_viewStat.clicked.connect(self.showStatTable)
+        self.btn_shop_viewStat.clicked.connect(self.reloadStats)
         self.btn_shop_exit.clicked.connect(frm_admin_main.close)
 
         # main form
@@ -920,13 +926,15 @@ class Ui_frm_admin_main(object):
 
     ########## Orders tab starts here ##########
 
-    def getOrders(self, con: dict = None):
+    def getOrders(self, con: dict = None, re=False):
         con = {} if con is None else con
         with GetDatabase() as conn:
             db = conn.get_database('ucwb')
             found = db.orders.count_documents(con)
             if found:
                 cursor = db.orders.find(con).sort('oid', pymongo.DESCENDING)
+                if re:
+                    return list(cursor)
                 self.orders = list(cursor)
                 self.orders_count = found
             else:
@@ -986,8 +994,6 @@ class Ui_frm_admin_main(object):
 
     def addToOrdersTable(self):
         self.btn_ord_view = list()
-        self.orders_status_total = [0, 0, 0, 0, 0, 0, 0]
-        self.orders_status_count = [0, 0, 0, 0, 0, 0, 0]
         try:
             for i, v in enumerate(self.orders):
                 oid = v['oid']
@@ -1031,10 +1037,6 @@ class Ui_frm_admin_main(object):
                 item_status.setTextAlignment(QtCore.Qt.AlignCenter | QtCore.Qt.AlignVCenter)
                 self.tbl_ord_orders.setItem(i, 5, item_status)
 
-                # เก็บ Stat
-                self.orders_status_count[self.getOrderStatusCmbIndex(int(v['status']) - 1)] += 1
-                self.orders_status_total[self.getOrderStatusCmbIndex(int(v['status']) - 1)] += total
-
         except TypeError:
             pass  # เผื่อไว้ในกรณีที่ไม่มี Order
 
@@ -1042,19 +1044,20 @@ class Ui_frm_admin_main(object):
             self.tbl_ord_orders.resizeRowsToContents()
 
     def searchOrders(self):
-        search_txt = self.txt_ord_search.text()
-        status = self.getOrderStatusCode(self.cmb_ord_statusSearch.currentIndex())
+        if self.orderDetailCancel():
+            search_txt = self.txt_ord_search.text()
+            status = self.getOrderStatusCode(self.cmb_ord_statusSearch.currentIndex())
 
-        con1 = {'$or': [{'oid': {"$regex": f'{search_txt}',
-                                 "$options": "i"}},
-                        {'username': {"$regex": f'{search_txt}',
-                                      "$options": "i"}}
-                        ]}
-        con2 = {'status': str(status)}
-        conditions = con1 if status is None else {'$and': [con1, con2]}
-        self.getOrders(conditions)
-        self.setupOrdersTable()
-        self.addToOrdersTable()
+            con1 = {'$or': [{'oid': {"$regex": f'{search_txt}',
+                                     "$options": "i"}},
+                            {'username': {"$regex": f'{search_txt}',
+                                          "$options": "i"}}
+                            ]}
+            con2 = {'status': str(status)}
+            conditions = con1 if status is None else {'$and': [con1, con2]}
+            self.getOrders(conditions)
+            self.setupOrdersTable()
+            self.addToOrdersTable()
 
     def getOrderStatusCode(self, index):
         code = index
@@ -1124,7 +1127,7 @@ class Ui_frm_admin_main(object):
         shipping = "ส่งด่วน" if data['shipping'] else "รับที่ร้าน"
         text = "ชื่อ\t: {}\nโทร\t: {}\nอยู่\t: {}\nการจัดส่ง\t: {}".format(name, tel, address, shipping)
         pyperclip.copy(text)
-        text += "\n\n(Copied to clipboard)"
+        text += "\n\n(คัดลอกไปยัง Clipboard แล้ว)"
 
         msg = QMessageBox()
         msg.setWindowTitle("ข้อมูลการจัดส่ง")
@@ -1223,7 +1226,7 @@ class Ui_frm_admin_main(object):
 
         if not self.cmb_ord_statusDetail.isEnabled():
             cancelAction()
-            return
+            return True
         if ask:
             msg = QMessageBox()
             ans = msg.question(msg, "แก้ไขรายละเอียดคำสั่งซื้อ",
@@ -1231,8 +1234,12 @@ class Ui_frm_admin_main(object):
                                msg.Yes | msg.No)
             if ans == msg.Yes:
                 cancelAction()
+                return True
+            else:
+                return False
         else:
             cancelAction()
+            return True
 
     def statusDetailChanged(self):
         if self.cmb_ord_statusDetail.currentIndex() == 5:
@@ -1330,7 +1337,7 @@ class Ui_frm_admin_main(object):
 
     ########## Products tab starts here ##########
 
-    def getProducts(self, con: dict = None, sort: tuple = None):
+    def getProducts(self, con: dict = None, sort: tuple = None, re=False):
         con = {} if con is None else con
         sort = ('pid', pymongo.ASCENDING) if sort is None else sort
         with GetDatabase() as conn:
@@ -1338,6 +1345,8 @@ class Ui_frm_admin_main(object):
             found = db.products.count_documents(con)
             if found:
                 cursor = db.products.find(con).sort([sort])
+                if re:
+                    return list(cursor)
                 self.products = list(cursor)
                 self.products_count = found
             else:
@@ -1347,7 +1356,6 @@ class Ui_frm_admin_main(object):
     def addToProductsTable(self):
         self.btn_pro_view = list()
         self.btn_pro_state = list()
-        self.products_cat_count = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
         cursor = self.products
         for i, v in enumerate(cursor):
             pid = v['pid']
@@ -1379,9 +1387,6 @@ class Ui_frm_admin_main(object):
             self.btn_pro_state.append(QtWidgets.QPushButton(status_text))
             self.btn_pro_state[i].clicked.connect(partial(self.setSelectedProductState, i, pid))
             self.tbl_pro_products.setCellWidget(i, 8, self.btn_pro_state[i])
-
-            # เก็บ Stat
-            self.products_cat_count[int(cat[-2:]) - 1] += 1
 
         self.tbl_pro_products.resizeRowsToContents()
 
@@ -1456,6 +1461,7 @@ class Ui_frm_admin_main(object):
         self.getProducts(con=con, sort=sort_con)
         self.setupProductsTable()
         self.addToProductsTable()
+        self.productDetailCancel(ask=False)
 
     def getSelectedProduct(self, i, data):
         self.lbl_pro_detail.setText("รายละเอียดสินค้า")
@@ -1659,7 +1665,7 @@ class Ui_frm_admin_main(object):
 
     ########## Customers tab starts here ##########
 
-    def getCustomers(self, con: dict = None, sort: tuple = None):
+    def getCustomers(self, con: dict = None, sort: tuple = None, re=False):
         default_con = {'username': {'$ne': 'admin'}}
         con = default_con if con is None else default_con | con
         sort = ('username', pymongo.ASCENDING) if sort is None else sort
@@ -1668,6 +1674,8 @@ class Ui_frm_admin_main(object):
             found = db.users.count_documents(con)
             if found:
                 cursor = db.users.find(con).sort([sort])
+                if re:
+                    return list(cursor)
                 self.customers = list(cursor)
                 self.customers_count = found
             else:
@@ -1676,13 +1684,11 @@ class Ui_frm_admin_main(object):
 
     def addToCustomersTable(self):
         self.btn_cus_select = list()
-        self.customers_username = list()
-        self.customers_joined_date = list()
         cursor = self.customers
         for i, v in enumerate(cursor):
             username = v['username']
-            name = v['name']
-            tel = v['tel']
+            name = v['shipping_info']['name']
+            tel = v['shipping_info']['tel']
             email = v['email']
             j_date = str(v['joined_date'].replace(microsecond=0))
             l_date = str(v['last_access'].replace(microsecond=0))
@@ -1715,10 +1721,6 @@ class Ui_frm_admin_main(object):
             # self.tbl_cus_customers.setItem(i, 4, QTableWidgetItem("{}".format(email)))
             # self.tbl_cus_customers.setItem(i, 5, QTableWidgetItem("{}".format(j_date)))
             # self.tbl_cus_customers.setItem(i, 6, QTableWidgetItem("{}".format(l_date)))
-
-            # เก็บ Stat
-            self.customers_username.append(username)
-            self.customers_joined_date.append(v['joined_date'])
 
         self.tbl_cus_customers.resizeRowsToContents()
 
@@ -1859,9 +1861,9 @@ class Ui_frm_admin_main(object):
                 con = {'username': username}
                 found = db.users.count_documents(con)
                 if found:
-                    setTo = {'$set': {'name': name,
-                                      'tel': tel,
-                                      'email': email
+                    setTo = {'$set': {'email': email,
+                                      'shipping_info.name': name,
+                                      'shipping_info.tel': tel
                                       }}
                     db.users.update_one(con, setTo)
 
@@ -1883,6 +1885,8 @@ class Ui_frm_admin_main(object):
     ########## Customers tab ends here ##########
 
     ########## My Shop tab starts here ##########
+
+    ### Shop Settings
 
     def getShopSettings(self):
         settings = getSettings()
@@ -1959,6 +1963,8 @@ class Ui_frm_admin_main(object):
         confirm = msg.question(msg, "การตั้งค่าร้านค้า", "ท่านต้องการ 'ยกเลิกการตั้งค่า' ใช่หรือไม่", msg.Yes | msg.No)
         if confirm == msg.Yes:
             self.setupSettingsForms()
+
+    ### Shop Coupons
 
     def getCoupons(self, con: dict = None):
         con = {} if con is None else con
@@ -2137,7 +2143,62 @@ class Ui_frm_admin_main(object):
                 self.btn_shop_saveCoupon.setText("เพิ่มคูปอง")
                 self.searchCoupons()
 
-    def showStatTable(self):
+    ### Shop Stats
+
+    def loadAllStats(self):
+        # orders = self.getOrders(re=True)
+        # products = self.getProducts(re=True)
+        # customers = self.getCustomers(re=True)
+        # self.orders_count_all = len(orders)
+        # self.products_count_all = len(products)
+        # self.customers_count_all = len(customers)
+
+        with GetDatabase() as conn:
+            db = conn.get_database('ucwb')
+            self.orders_count_all = db.orders.count_documents({})
+            orders = db.orders.find({})
+            self.products_count_all = db.products.count_documents({})
+            products = db.products.find({})
+            con = {'username': {'$ne': 'admin'}}
+            self.customers_count_all = db.users.count_documents(con)
+            customers = db.users.find(con)
+
+        # เก็บ Orders Stats
+        self.orders_status_total = [0, 0, 0, 0, 0, 0, 0]
+        self.orders_status_count = [0, 0, 0, 0, 0, 0, 0]
+        for i, v in enumerate(orders):
+            total = 0
+            for item in v['cart']:
+                total += item['price'] * item['qty']
+            vat = total * self.tax_rate / 100
+            total += vat
+            if v['shipping_info']['shipping']:
+                total += self.shipping_fee
+            discount = float(v['coupon']['value'])
+            total -= discount
+            self.orders_status_count[self.getOrderStatusCmbIndex(int(v['status']) - 1)] += 1
+            self.orders_status_total[self.getOrderStatusCmbIndex(int(v['status']) - 1)] += total
+
+        # เก็บ Products Stats
+        self.products_cat_count = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        for i, v in enumerate(products):
+            cat = v['cat']
+            self.products_cat_count[int(cat[-2:]) - 1] += 1
+
+        # เก็บ Customers Stats
+        self.customers_username = list()
+        self.customers_joined_date = list()
+        for i, v in enumerate(customers):
+            username = v['username']
+            j_date = v['joined_date']
+            self.customers_username.append(username)
+            self.customers_joined_date.append(j_date)
+
+    def reloadStats(self):
+        self.loadAllStats()
+        self.showStatsTable()
+
+    def showStatsTable(self):
         view = self.cmb_shop_viewStat.currentIndex()
         if view == 0:
             self.setupStatTable_overview()
@@ -2154,17 +2215,17 @@ class Ui_frm_admin_main(object):
 
     def addToStatTable_overview(self):
         self.tbl_shop_stat.setItem(0, 0, QTableWidgetItem("คำสั่งซื้อ"))
-        item = QTableWidgetItem("{:,}".format(self.orders_count))
+        item = QTableWidgetItem("{:,}".format(self.orders_count_all))
         item.setTextAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
         self.tbl_shop_stat.setItem(0, 1, item)
 
         self.tbl_shop_stat.setItem(1, 0, QTableWidgetItem("สินค้า"))
-        item = QTableWidgetItem("{:,}".format(self.products_count))
+        item = QTableWidgetItem("{:,}".format(self.products_count_all))
         item.setTextAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
         self.tbl_shop_stat.setItem(1, 1, item)
 
         self.tbl_shop_stat.setItem(2, 0, QTableWidgetItem("ลูกค้า"))
-        item = QTableWidgetItem("{:,}".format(self.customers_count))
+        item = QTableWidgetItem("{:,}".format(self.customers_count_all))
         item.setTextAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
         self.tbl_shop_stat.setItem(2, 1, item)
 
@@ -2275,7 +2336,8 @@ class Ui_frm_admin_main(object):
             username = usernames[i]
             date = dates[i]
             days = datetime.now() - date
-            days = str(days).split('.')[0]
+            # days = str(days).split('.')[0]
+            days = str(days)[:-10]
 
             self.tbl_shop_stat.setItem(i, 0, QTableWidgetItem("{}".format(username)))
             self.tbl_shop_stat.setItem(i, 1, QTableWidgetItem("{}".format(days)))
@@ -2290,7 +2352,7 @@ class Ui_frm_admin_main(object):
 
         # สร้าง Header
         header0 = QtWidgets.QTableWidgetItem("รายการ")
-        header1 = QtWidgets.QTableWidgetItem("วันที่เป็นสมาชิก")
+        header1 = QtWidgets.QTableWidgetItem("อายุสมาชิก")
 
         # ใส่ Header ให้ Table
         self.tbl_shop_stat.setHorizontalHeaderItem(0, header0)
@@ -2326,21 +2388,28 @@ class Ui_frm_admin_main(object):
                     else:
                         new_pwd, ok = QInputDialog.getText(frm_admin_main, win_title, "กรุณากรอกรหัสผ่านใหม่",
                                                            QLineEdit.Password)
-                        if ok:
-                            renew_pwd, ok = QInputDialog.getText(frm_admin_main, win_title,
-                                                                 "กรุณากรอกรหัสผ่านใหม่อีกครั้ง", QLineEdit.Password)
-                            if new_pwd != renew_pwd:
-                                msg.setIcon(msg.Warning)
-                                msg.setText("รหัสผ่านไม่ตรงกัน\nกรุณาลองใหม่อีกครั้ง")
-                                msg.exec_()
-                            else:
-                                # เปลี่ยน password ใหม่
-                                hashed_pwd = HashPassword(new_pwd)
-                                setTo = {'$set': {'password': hashed_pwd.getSaltAndHashChunk()}}
-                                db.users.update_one(condition, setTo)
-                                msg.setIcon(msg.Information)
-                                msg.setText("เปลี่ยนรหัสผ่านใหม่สำเร็จ")
-                                msg.exec_()
+                        if not bool(re.match(REGEX_PASSWORD, new_pwd)):
+                            msg.setIcon(msg.Warning)
+                            msg.setText("กรุณาตั้งรหัสผ่านที่มีความยาวตั้งแต่ 8 ตัวอักษรขึ้นไป\n"
+                                        "และต้องประกอบไปด้วยอักขระดังต่อไปนี้\n\t- ตัวพิมพ์เล็ก\n\t- ตัวพิมพ์ใหญ่\n\t- ตัวเลข")
+                            msg.exec_()
+                        else:
+                            if ok:
+                                renew_pwd, ok = QInputDialog.getText(frm_admin_main, win_title,
+                                                                     "กรุณากรอกรหัสผ่านใหม่อีกครั้ง",
+                                                                     QLineEdit.Password)
+                                if new_pwd != renew_pwd:
+                                    msg.setIcon(msg.Warning)
+                                    msg.setText("รหัสผ่านไม่ตรงกัน\nกรุณาลองใหม่อีกครั้ง")
+                                    msg.exec_()
+                                else:
+                                    # เปลี่ยน password ใหม่
+                                    hashed_pwd = HashPassword(new_pwd)
+                                    setTo = {'$set': {'password': hashed_pwd.getSaltAndHashChunk()}}
+                                    db.users.update_one(condition, setTo)
+                                    msg.setIcon(msg.Information)
+                                    msg.setText("เปลี่ยนรหัสผ่านใหม่สำเร็จ")
+                                    msg.exec_()
 
     ########## My Shop tab ends here ##########
 
@@ -2489,7 +2558,7 @@ class Ui_frm_admin_main(object):
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_customers), _translate("frm_admin_main", "Customers"))
         self.btn_shop_changePwd.setText(_translate("frm_admin_main", "เปลี่ยนรหัสผ่าน"))
         self.lbl_shop_stat.setText(_translate("frm_admin_main", "สถิติร้านค้า"))
-        self.btn_shop_viewStat.setText(_translate("frm_admin_main", "ดู"))
+        self.btn_shop_viewStat.setText(_translate("frm_admin_main", "รีเฟรช"))
         self.cmb_shop_viewStat.setItemText(0, _translate("frm_admin_main", "ภาพรวม"))
         self.cmb_shop_viewStat.setItemText(1, _translate("frm_admin_main", "คำสั่งซื้อ"))
         self.cmb_shop_viewStat.setItemText(2, _translate("frm_admin_main", "สินค้า"))

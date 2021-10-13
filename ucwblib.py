@@ -25,6 +25,12 @@ ORDER_STATUS = {'-2': 'ไม่ผ่านการตรวจสอบ',
                 '3': 'รอการจัดส่ง',
                 '4': 'จัดส่งแล้ว'}
 
+REGEX_USERNAME = "^[A-Za-z0-9_-]*$"  # only contains letters, numbers, underscores and dashes
+REGEX_TEL = "^[0-9]{3}-[0-9]{3}-[0-9]{4}$"  # for tel no.
+REGEX_EMAIL = "^\\w+([\\.-]?\\w+)*@\\w+([\\.-]?\\w+)*(\\.\\w{2,3})+$"  # for email
+REGEX_PASSWORD = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)[a-zA-Z\\d]{8,}$"  # length >= 8, uppercase & lowercase & number >= 1
+REGEX_INT_0_100 = "\\b([0-9]|[1-9][0-9]|100)\\b"  # integer 0-100
+
 
 # Connect to cloud database
 class GetDatabase(object):
