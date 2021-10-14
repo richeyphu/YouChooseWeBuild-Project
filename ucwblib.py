@@ -12,7 +12,7 @@ from os import urandom
 ICON_PATH = "resource/logo/icon.ico"
 ICON_PATH_ADMIN = "resource/logo/icon_admin.ico"
 
-CONNECTION_STRING = "mongodb+srv://<...>"
+CONNECTION_STRING = "mongodb+srv://<...>"  # Enters your own server here
 
 ORDER_STATUS = {'-2': 'ไม่ผ่านการตรวจสอบ',
                 '-1': 'ยกเลิกแล้ว',
