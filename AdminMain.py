@@ -1768,9 +1768,9 @@ class Ui_frm_admin_main(object):
         if search_txt != "":
             con = {'$or': [{'username': {"$regex": f'{search_txt}',
                                          "$options": "i"}},
-                           {'name': {"$regex": f'{search_txt}',
+                           {'shipping_info.name': {"$regex": f'{search_txt}',
                                      "$options": "i"}},
-                           {'tel': {"$regex": f'{search_txt}',
+                           {'shipping_info.tel': {"$regex": f'{search_txt}',
                                     "$options": "i"}},
                            {'email': {"$regex": f'{search_txt}',
                                       "$options": "i"}}
@@ -2176,8 +2176,8 @@ class Ui_frm_admin_main(object):
                 total += self.shipping_fee
             discount = float(v['coupon']['value'])
             total -= discount
-            self.orders_status_count[self.getOrderStatusCmbIndex(int(v['status']) - 1)] += 1
-            self.orders_status_total[self.getOrderStatusCmbIndex(int(v['status']) - 1)] += total
+            self.orders_status_count[self.getOrderStatusCmbIndex(int(v['status'])) - 1] += 1
+            self.orders_status_total[self.getOrderStatusCmbIndex(int(v['status'])) - 1] += total
 
         # เก็บ Products Stats
         self.products_cat_count = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]

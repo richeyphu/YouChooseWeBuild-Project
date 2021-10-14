@@ -258,7 +258,7 @@ class Ui_frm_cus_checkout(object):
         self.showTable()
         self.getCusInfo()
 
-        self.txt_tel.setValidator(QRegExpValidator(QRegExp("^[0-9]{3}-[0-9]{3}-[0-9]{4}$")))
+        self.txt_tel.setValidator(QRegExpValidator(QRegExp(REGEX_TEL)))
 
         # Event-Driven
         self.btn_confirm.clicked.connect(self.confirmOrder)

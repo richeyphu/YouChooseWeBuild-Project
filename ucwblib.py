@@ -13,8 +13,6 @@ ICON_PATH = "resource/logo/icon.ico"
 ICON_PATH_ADMIN = "resource/logo/icon_admin.ico"
 
 # CONNECTION_STRING = "mongodb+srv://<...>"
-# CONNECTION_STRING = "mongodb+srv://admin:NOCvZLbzSxi8IsCB@cluster0.cc3d8.mongodb.net/ucwb?retryWrites=true&w=majority"
-# CONNECTION_STRING = "mongodb+srv://tni:zfqN44SoOI7dBwSm@cluster0.cc3d8.mongodb.net/ucwb?retryWrites=true&w=majority"
 CONNECTION_STRING = "mongodb+srv://tni_ucwb:fw17taFaN798hbGE@cluster0.cc3d8.mongodb.net/ucwb?retryWrites=true&w=majority"
 
 ORDER_STATUS = {'-2': 'ไม่ผ่านการตรวจสอบ',
@@ -32,7 +30,7 @@ REGEX_PASSWORD = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)[a-zA-Z\\d]{8,}$"  # length >=
 REGEX_INT_0_100 = "\\b([0-9]|[1-9][0-9]|100)\\b"  # integer 0-100
 
 
-# Connect to cloud database
+# Connects to cloud database
 class GetDatabase(object):
 
     def __init__(self, conn_str=CONNECTION_STRING):
@@ -110,7 +108,6 @@ class AdminQMessageBox(QtWidgets.QMessageBox):
 
 def getSettings():
     settings = dict()
-
     with GetDatabase() as conn:
         db = conn.get_database('ucwb')
         # condition = {'name': 'shipping_fee'}
@@ -119,7 +116,6 @@ def getSettings():
         settings['shipping_fee'] = cursor[0]['value']
         settings['tax_rate'] = cursor[1]['value']
         settings['payment_detail'] = cursor[2]['value']
-
     return settings
 
 
