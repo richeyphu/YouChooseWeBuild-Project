@@ -23,6 +23,7 @@ $ python3 _run.py
 - [`pymongo`](https://pypi.org/project/pymongo/)
 - [`pypromptpay`](https://pypi.org/project/pypromptpay/)
 - [`pyperclip`](https://pypi.org/project/pyperclip/)
+- [`Pillow`](https://pypi.org/project/Pillow/)
 
 ## Development Tools
 * **IDE :** [`PyCharm Professional 2021.1.2`](https://www.jetbrains.com/pycharm/) or newer
