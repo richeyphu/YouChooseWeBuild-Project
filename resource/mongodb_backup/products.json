@@ -1,89 +1,5 @@
 [{
   "_id": {
-    "$oid": "6131dce476ea9495a0013fe8"
-  },
-  "pid": "1010001",
-  "name": "Core i5-11400F",
-  "desc": "Intel CPU",
-  "brand": "Intel",
-  "price": 6190,
-  "keyword": "Core i5",
-  "cat": "101",
-  "date_added": {
-    "$date": "2021-09-02T17:00:01Z"
-  }
-},{
-  "_id": {
-    "$oid": "6131de9576ea9495a0013fe9"
-  },
-  "pid": "1010002",
-  "name": "Ryzen 7 5700G",
-  "desc": "AMD CPU",
-  "brand": "AMD",
-  "price": 8000,
-  "keyword": "Ryzen 7",
-  "cat": "101",
-  "date_added": {
-    "$date": "2021-09-02T17:00:02Z"
-  }
-},{
-  "_id": {
-    "$oid": "6131df0e76ea9495a0013fec"
-  },
-  "pid": "1010003",
-  "name": "Ryzen 5 5600G",
-  "desc": "AMD CPU",
-  "brand": "AMD",
-  "price": 9900,
-  "keyword": "Ryzen 5",
-  "cat": "101",
-  "date_added": {
-    "$date": "2021-09-02T17:00:03Z"
-  }
-},{
-  "_id": {
-    "$oid": "61377bb72f923f4f49ea719f"
-  },
-  "pid": "1010004",
-  "name": "Core i5-10400F",
-  "desc": "Intel CPU",
-  "brand": "Intel",
-  "price": 5900,
-  "keyword": "Core i5",
-  "cat": "101",
-  "date_added": {
-    "$date": "2021-09-02T17:00:04Z"
-  }
-},{
-  "_id": {
-    "$oid": "61377c012f923f4f49ea71a1"
-  },
-  "pid": "1010005",
-  "name": "Ryzen 5 3600",
-  "desc": "AMD CPU",
-  "brand": "AMD",
-  "price": 7050,
-  "keyword": "Ryzen 5",
-  "cat": "101",
-  "date_added": {
-    "$date": "2021-09-02T17:00:05Z"
-  }
-},{
-  "_id": {
-    "$oid": "61377c212f923f4f49ea71a2"
-  },
-  "pid": "1010006",
-  "name": "Core i3-10105F",
-  "desc": "Intel CPU",
-  "brand": "Intel",
-  "price": 3090,
-  "keyword": "Core i3",
-  "cat": "101",
-  "date_added": {
-    "$date": "2021-09-02T17:00:06Z"
-  }
-},{
-  "_id": {
     "$oid": "61377c5e2f923f4f49ea71a3"
   },
   "pid": "1010007",
@@ -95,357 +11,23 @@
   "cat": "101",
   "date_added": {
     "$date": "2021-09-02T17:00:07Z"
-  }
+  },
+  "status": true
 },{
   "_id": {
-    "$oid": "61377c8e2f923f4f49ea71a4"
+    "$oid": "6131dce476ea9495a0013fe8"
   },
-  "pid": "1010008",
-  "name": "Ryzen 7 3700X",
-  "desc": "AMD CPU",
-  "brand": "AMD",
-  "price": 11900,
-  "keyword": "Ryzen 7",
-  "cat": "101",
-  "date_added": {
-    "$date": "2021-09-02T17:00:08Z"
-  }
-},{
-  "_id": {
-    "$oid": "61377cbb2f923f4f49ea71a5"
-  },
-  "pid": "1010009",
-  "name": "Core i7-11700K",
+  "pid": "1010001",
+  "name": "Core i5-11400F",
   "desc": "Intel CPU",
   "brand": "Intel",
-  "price": 13750,
-  "keyword": "Core i7",
+  "price": 6190,
+  "keyword": "Core i5",
   "cat": "101",
   "date_added": {
-    "$date": "2021-09-02T17:00:09Z"
-  }
-},{
-  "_id": {
-    "$oid": "61377d4e2f923f4f49ea71a6"
+    "$date": "2021-09-02T17:00:01Z"
   },
-  "pid": "1020001",
-  "name": "B450M AORUS ELITE",
-  "desc": "GIGABYTE Mainboard",
-  "brand": "GIGABYTE",
-  "price": 2650,
-  "keyword": "B450M",
-  "cat": "102",
-  "date_added": {
-    "$date": "2021-09-02T17:00:10Z"
-  }
-},{
-  "_id": {
-    "$oid": "61377d8d2f923f4f49ea71a7"
-  },
-  "pid": "1020002",
-  "name": "B460M-A PRO",
-  "desc": "MSI Mainboard",
-  "brand": "MSI",
-  "price": 2550,
-  "keyword": "B460M",
-  "cat": "102",
-  "date_added": {
-    "$date": "2021-09-02T17:00:11Z"
-  }
-},{
-  "_id": {
-    "$oid": "61377db92f923f4f49ea71a8"
-  },
-  "pid": "1020003",
-  "name": "B460M Aorus Pro",
-  "desc": "GIGABYTE Mainboard",
-  "brand": "GIGABYTE",
-  "price": 3390,
-  "keyword": "B460M",
-  "cat": "102",
-  "date_added": {
-    "$date": "2021-09-02T17:00:12Z"
-  }
-},{
-  "_id": {
-    "$oid": "61377de52f923f4f49ea71a9"
-  },
-  "pid": "1020004",
-  "name": "A320M-A Pro",
-  "desc": "MSI Mainboard",
-  "brand": "MSI",
-  "price": 1390,
-  "keyword": "A320M",
-  "cat": "102",
-  "date_added": {
-    "$date": "2021-09-02T17:00:13Z"
-  }
-},{
-  "_id": {
-    "$oid": "61377e092f923f4f49ea71aa"
-  },
-  "pid": "1020005",
-  "name": "B450M Steel Legend",
-  "desc": "ASROCK Mainboard",
-  "brand": "ASROCK",
-  "price": 3350,
-  "keyword": "B450M",
-  "cat": "102",
-  "date_added": {
-    "$date": "2021-09-02T17:00:14Z"
-  }
-},{
-  "_id": {
-    "$oid": "61377e442f923f4f49ea71ab"
-  },
-  "pid": "1020006",
-  "name": "B560M Pro4",
-  "desc": "ASROCK Mainboard",
-  "brand": "ASROCK",
-  "price": 3650,
-  "keyword": "B560M",
-  "cat": "102",
-  "date_added": {
-    "$date": "2021-09-02T17:00:15Z"
-  }
-},{
-  "_id": {
-    "$oid": "61377ec52f923f4f49ea71ac"
-  },
-  "pid": "1030001",
-  "name": "RTX 3060 12GB",
-  "desc": "NVIDIA Graphics Processing Unit",
-  "brand": "NVIDIA",
-  "price": 11500,
-  "keyword": "RTX 3060",
-  "cat": "103",
-  "date_added": {
-    "$date": "2021-09-02T17:00:16Z"
-  }
-},{
-  "_id": {
-    "$oid": "61377f592f923f4f49ea71ad"
-  },
-  "pid": "1030002",
-  "name": "GTX 1650 OC 4GB",
-  "desc": "NVIDIA Graphics Processing Unit",
-  "brand": "GIGABYTE",
-  "price": 12500,
-  "keyword": "GTX 1650",
-  "cat": "103",
-  "date_added": {
-    "$date": "2021-09-02T17:00:17Z"
-  }
-},{
-  "_id": {
-    "$oid": "613780502f923f4f49ea71ae"
-  },
-  "pid": "1030003",
-  "name": "Radeon RX 570 8GT OC 8GB",
-  "desc": "AMD Graphics Processing Unit",
-  "brand": "MSI",
-  "price": 4990,
-  "keyword": "RX 570",
-  "cat": "103",
-  "date_added": {
-    "$date": "2021-09-02T17:00:18Z"
-  }
-},{
-  "_id": {
-    "$oid": "6137807b2f923f4f49ea71af"
-  },
-  "pid": "1030004",
-  "name": "GTX 1650 SUPER GAMING X 4GB",
-  "desc": "NVIDIA Graphics Processing Unit",
-  "brand": "MSI",
-  "price": 5990,
-  "keyword": "GTX 1650",
-  "cat": "103",
-  "date_added": {
-    "$date": "2021-09-02T17:00:18Z"
-  }
-},{
-  "_id": {
-    "$oid": "613781002f923f4f49ea71b0"
-  },
-  "pid": "1040001",
-  "name": "Hyper-X Fury DDR4 16GB (16GBx1) 2400 Black",
-  "desc": "KINGSTON RAM",
-  "brand": "KINGTON",
-  "price": 2990,
-  "keyword": "16GB (16GBx1)",
-  "cat": "104",
-  "date_added": {
-    "$date": "2021-09-02T17:00:19Z"
-  }
-},{
-  "_id": {
-    "$oid": "613781562f923f4f49ea71b1"
-  },
-  "pid": "1040002",
-  "name": "Hyper-X Fury DDR4 16GB (16GBx1) 2400 Black",
-  "desc": "Thermaltake RAM",
-  "brand": "Thermaltake",
-  "price": 2130,
-  "keyword": "16GB (8GBx2)",
-  "cat": "104",
-  "date_added": {
-    "$date": "2021-09-02T17:00:20Z"
-  }
-},{
-  "_id": {
-    "$oid": "613781a62f923f4f49ea71b2"
-  },
-  "pid": "1040003",
-  "name": "Vengeance RGB Pro DDR4 16GB (8GBx2) 3200 Black",
-  "desc": "CORSAIR RAM",
-  "brand": "CORSAIR",
-  "price": 3320,
-  "keyword": "16GB (8GBx2)",
-  "cat": "104",
-  "date_added": {
-    "$date": "2021-09-02T17:00:21Z"
-  }
-},{
-  "_id": {
-    "$oid": "613782032f923f4f49ea71b3"
-  },
-  "pid": "1050001",
-  "name": "Blue 1TB WD10EZEX",
-  "desc": "Western Digital Harddisk",
-  "brand": "Western Digital",
-  "price": 925,
-  "keyword": "1TB",
-  "cat": "105",
-  "date_added": {
-    "$date": "2021-09-02T17:00:22Z"
-  }
-},{
-  "_id": {
-    "$oid": "6137824c2f923f4f49ea71b4"
-  },
-  "pid": "1050002",
-  "name": "Blue 2TB WD10EZEX",
-  "desc": "Western Digital Harddisk",
-  "brand": "Western Digital",
-  "price": 1640,
-  "keyword": "2TB",
-  "cat": "105",
-  "date_added": {
-    "$date": "2021-09-02T17:00:23Z"
-  }
-},{
-  "_id": {
-    "$oid": "613782672f923f4f49ea71b5"
-  },
-  "pid": "1050003",
-  "name": "BARRACUDA 1TB",
-  "desc": "SEAGATE Harddisk",
-  "brand": "SEAGATE",
-  "price": 1020,
-  "keyword": "1TB",
-  "cat": "105",
-  "date_added": {
-    "$date": "2021-09-02T17:00:24Z"
-  }
-},{
-  "_id": {
-    "$oid": "613782c22f923f4f49ea71b6"
-  },
-  "pid": "1060001",
-  "name": "970 EVO Plus 500GB NVMe",
-  "desc": "SAMSUNG SSD",
-  "brand": "SAMSUNG",
-  "price": 2700,
-  "keyword": "500GB",
-  "cat": "106",
-  "date_added": {
-    "$date": "2021-09-02T17:00:25Z"
-  }
-},{
-  "_id": {
-    "$oid": "613782eb2f923f4f49ea71b7"
-  },
-  "pid": "1060002",
-  "name": "Blue SN550 500GB NVMe",
-  "desc": "Western Digital SSD",
-  "brand": "Western Digital",
-  "price": 2060,
-  "keyword": "500GB",
-  "cat": "106",
-  "date_added": {
-    "$date": "2021-09-02T17:00:26Z"
-  }
-},{
-  "_id": {
-    "$oid": "613783112f923f4f49ea71b8"
-  },
-  "pid": "1060003",
-  "name": "Black SN750 500GB NVMe",
-  "desc": "Western Digital SSD",
-  "brand": "Western Digital",
-  "price": 3990,
-  "keyword": "500GB",
-  "cat": "106",
-  "date_added": {
-    "$date": "2021-09-02T17:00:27Z"
-  }
-},{
-  "_id": {
-    "$oid": "613783662f923f4f49ea71b9"
-  },
-  "pid": "1070001",
-  "name": "CX750M",
-  "desc": "CORSAIR Power Supply Unit",
-  "brand": "CORSAIR",
-  "price": 2790,
-  "keyword": "750W",
-  "cat": "107",
-  "date_added": {
-    "$date": "2021-09-02T17:00:28Z"
-  }
-},{
-  "_id": {
-    "$oid": "613783ce2f923f4f49ea71ba"
-  },
-  "pid": "1070002",
-  "name": "Superb 600W",
-  "desc": "AEROCOOL Power Supply Unit",
-  "brand": "AEROCOOL",
-  "price": 790,
-  "keyword": "600W",
-  "cat": "107",
-  "date_added": {
-    "$date": "2021-09-02T17:00:29Z"
-  }
-},{
-  "_id": {
-    "$oid": "613783f62f923f4f49ea71bb"
-  },
-  "pid": "1070003",
-  "name": "CV650",
-  "desc": "CORSAIR Power Supply Unit",
-  "brand": "CORSAIR",
-  "price": 1990,
-  "keyword": "650W",
-  "cat": "107",
-  "date_added": {
-    "$date": "2021-09-02T17:00:30Z"
-  }
-},{
-  "_id": {
-    "$oid": "613784472f923f4f49ea71bc"
-  },
-  "pid": "1080001",
-  "name": "Eros Black",
-  "desc": "XIGMATEK Case",
-  "brand": "XIGMATEK",
-  "price": 790,
-  "keyword": "Mid Tower",
-  "cat": "108",
-  "date_added": {
-    "$date": "2021-09-02T17:00:31Z"
-  }
+  "status": true
 },{
   "_id": {
     "$oid": "613784982f923f4f49ea71bd"
@@ -459,7 +41,8 @@
   "cat": "108",
   "date_added": {
     "$date": "2021-09-02T17:00:32Z"
-  }
+  },
+  "status": true
 },{
   "_id": {
     "$oid": "613784b22f923f4f49ea71be"
@@ -473,21 +56,53 @@
   "cat": "108",
   "date_added": {
     "$date": "2021-09-02T17:00:33Z"
-  }
+  },
+  "status": true
 },{
   "_id": {
-    "$oid": "613784f72f923f4f49ea71bf"
+    "$oid": "6131df0e76ea9495a0013fec"
   },
-  "pid": "1090001",
-  "name": "Cylon 4",
-  "desc": "AEROCOOL CPU Cooler",
-  "brand": "AEROCOOL",
-  "price": 890,
-  "keyword": "Air Cooler",
-  "cat": "109",
+  "pid": "1010003",
+  "name": "Ryzen 5 5600G",
+  "desc": "AMD CPU",
+  "brand": "AMD",
+  "price": 9900,
+  "keyword": "Ryzen 5",
+  "cat": "101",
   "date_added": {
-    "$date": "2021-09-02T17:00:34Z"
-  }
+    "$date": "2021-09-02T17:00:03Z"
+  },
+  "status": true
+},{
+  "_id": {
+    "$oid": "613782eb2f923f4f49ea71b7"
+  },
+  "pid": "1060002",
+  "name": "Blue SN550 500GB NVMe",
+  "desc": "Western Digital SSD",
+  "brand": "Western Digital",
+  "price": 2060,
+  "keyword": "500GB",
+  "cat": "106",
+  "date_added": {
+    "$date": "2021-09-02T17:00:26Z"
+  },
+  "status": true
+},{
+  "_id": {
+    "$oid": "613783662f923f4f49ea71b9"
+  },
+  "pid": "1070001",
+  "name": "CX750M",
+  "desc": "CORSAIR Power Supply Unit",
+  "brand": "CORSAIR",
+  "price": 2790,
+  "keyword": "750W",
+  "cat": "107",
+  "date_added": {
+    "$date": "2021-09-02T17:00:28Z"
+  },
+  "status": true
 },{
   "_id": {
     "$oid": "6137852e2f923f4f49ea71c0"
@@ -501,7 +116,68 @@
   "cat": "109",
   "date_added": {
     "$date": "2021-09-02T17:00:35Z"
-  }
+  },
+  "status": true
+},{
+  "_id": {
+    "$oid": "613782672f923f4f49ea71b5"
+  },
+  "pid": "1050003",
+  "name": "BARRACUDA 1TB",
+  "desc": "SEAGATE Harddisk",
+  "brand": "SEAGATE",
+  "price": 1020,
+  "keyword": "1TB",
+  "cat": "105",
+  "date_added": {
+    "$date": "2021-09-02T17:00:24Z"
+  },
+  "status": true
+},{
+  "_id": {
+    "$oid": "613782032f923f4f49ea71b3"
+  },
+  "pid": "1050001",
+  "name": "Blue 1TB WD10EZEX",
+  "desc": "Western Digital Harddisk",
+  "brand": "Western Digital",
+  "price": 925,
+  "keyword": "1TB",
+  "cat": "105",
+  "date_added": {
+    "$date": "2021-09-02T17:00:22Z"
+  },
+  "status": true
+},{
+  "_id": {
+    "$oid": "61377bb72f923f4f49ea719f"
+  },
+  "pid": "1010004",
+  "name": "Core i5-10400F",
+  "desc": "Intel CPU",
+  "brand": "Intel",
+  "price": 5900,
+  "keyword": "Core i5",
+  "cat": "101",
+  "date_added": {
+    "$date": "2021-09-02T17:00:04Z"
+  },
+  "status": true
+},{
+  "_id": {
+    "$oid": "613784472f923f4f49ea71bc"
+  },
+  "pid": "1080001",
+  "name": "Eros Black",
+  "desc": "XIGMATEK Case",
+  "brand": "XIGMATEK",
+  "price": 790,
+  "keyword": "Mid Tower",
+  "cat": "108",
+  "date_added": {
+    "$date": "2021-09-02T17:00:31Z"
+  },
+  "status": true
 },{
   "_id": {
     "$oid": "613785522f923f4f49ea71c1"
@@ -515,35 +191,233 @@
   "cat": "109",
   "date_added": {
     "$date": "2021-09-02T17:00:36Z"
-  }
+  },
+  "status": true
 },{
   "_id": {
-    "$oid": "613785aa2f923f4f49ea71c2"
+    "$oid": "61377d4e2f923f4f49ea71a6"
   },
-  "pid": "1100001",
-  "name": "EL2870U",
-  "desc": "BENQ Monitor",
-  "brand": "BENQ",
-  "price": 13990,
-  "keyword": "28 2K",
-  "cat": "110",
+  "pid": "1020001",
+  "name": "B450M AORUS ELITE",
+  "desc": "GIGABYTE Mainboard",
+  "brand": "GIGABYTE",
+  "price": 2650,
+  "keyword": "B450M",
+  "cat": "102",
   "date_added": {
-    "$date": "2021-09-02T17:00:37Z"
-  }
+    "$date": "2021-09-02T17:00:10Z"
+  },
+  "status": true
 },{
   "_id": {
-    "$oid": "613786152f923f4f49ea71c3"
+    "$oid": "61377d8d2f923f4f49ea71a7"
   },
-  "pid": "1100002",
-  "name": "LS22R350FHEXXT",
-  "desc": "SAMSUNG Monitor",
+  "pid": "1020002",
+  "name": "B460M-A PRO",
+  "desc": "MSI Mainboard",
+  "brand": "MSI",
+  "price": 2550,
+  "keyword": "B460M",
+  "cat": "102",
+  "date_added": {
+    "$date": "2021-09-02T17:00:11Z"
+  },
+  "status": true
+},{
+  "_id": {
+    "$oid": "613781562f923f4f49ea71b1"
+  },
+  "pid": "1040002",
+  "name": "Hyper-X Fury DDR4 16GB (16GBx1) 2400 Black",
+  "desc": "Thermaltake RAM",
+  "brand": "Thermaltake",
+  "price": 2130,
+  "keyword": "16GB (8GBx2)",
+  "cat": "104",
+  "date_added": {
+    "$date": "2021-09-02T17:00:20Z"
+  },
+  "status": true
+},{
+  "_id": {
+    "$oid": "613781a62f923f4f49ea71b2"
+  },
+  "pid": "1040003",
+  "name": "Vengeance RGB Pro DDR4 16GB (8GBx2) 3200 Black",
+  "desc": "CORSAIR RAM",
+  "brand": "CORSAIR",
+  "price": 3320,
+  "keyword": "16GB (8GBx2)",
+  "cat": "104",
+  "date_added": {
+    "$date": "2021-09-02T17:00:21Z"
+  },
+  "status": true
+},{
+  "_id": {
+    "$oid": "6137824c2f923f4f49ea71b4"
+  },
+  "pid": "1050002",
+  "name": "Blue 2TB WD10EZEX",
+  "desc": "Western Digital Harddisk",
+  "brand": "Western Digital",
+  "price": 1640,
+  "keyword": "2TB",
+  "cat": "105",
+  "date_added": {
+    "$date": "2021-09-02T17:00:23Z"
+  },
+  "status": true
+},{
+  "_id": {
+    "$oid": "61377c8e2f923f4f49ea71a4"
+  },
+  "pid": "1010008",
+  "name": "Ryzen 7 3700X",
+  "desc": "AMD CPU",
+  "brand": "AMD",
+  "price": 11900,
+  "keyword": "Ryzen 7",
+  "cat": "101",
+  "date_added": {
+    "$date": "2021-09-02T17:00:08Z"
+  },
+  "status": true
+},{
+  "_id": {
+    "$oid": "6131de9576ea9495a0013fe9"
+  },
+  "pid": "1010002",
+  "name": "Ryzen 7 5700G",
+  "desc": "AMD CPU",
+  "brand": "AMD",
+  "price": 8000,
+  "keyword": "Ryzen 7",
+  "cat": "101",
+  "date_added": {
+    "$date": "2021-09-02T17:00:02Z"
+  },
+  "status": true
+},{
+  "_id": {
+    "$oid": "613782c22f923f4f49ea71b6"
+  },
+  "pid": "1060001",
+  "name": "970 EVO Plus 500GB NVMe",
+  "desc": "SAMSUNG SSD",
   "brand": "SAMSUNG",
-  "price": 2500,
-  "keyword": "21.5 1080p",
-  "cat": "110",
+  "price": 2700,
+  "keyword": "500GB",
+  "cat": "106",
   "date_added": {
-    "$date": "2021-09-02T17:00:38Z"
-  }
+    "$date": "2021-09-02T17:00:25Z"
+  },
+  "status": true
+},{
+  "_id": {
+    "$oid": "613783112f923f4f49ea71b8"
+  },
+  "pid": "1060003",
+  "name": "Black SN750 500GB NVMe",
+  "desc": "Western Digital SSD",
+  "brand": "Western Digital",
+  "price": 3990,
+  "keyword": "500GB",
+  "cat": "106",
+  "date_added": {
+    "$date": "2021-09-02T17:00:27Z"
+  },
+  "status": true
+},{
+  "_id": {
+    "$oid": "613783ce2f923f4f49ea71ba"
+  },
+  "pid": "1070002",
+  "name": "Superb 600W",
+  "desc": "AEROCOOL Power Supply Unit",
+  "brand": "AEROCOOL",
+  "price": 790,
+  "keyword": "600W",
+  "cat": "107",
+  "date_added": {
+    "$date": "2021-09-02T17:00:29Z"
+  },
+  "status": true
+},{
+  "_id": {
+    "$oid": "613784f72f923f4f49ea71bf"
+  },
+  "pid": "1090001",
+  "name": "Cylon 4",
+  "desc": "AEROCOOL CPU Cooler",
+  "brand": "AEROCOOL",
+  "price": 890,
+  "keyword": "Air Cooler",
+  "cat": "109",
+  "date_added": {
+    "$date": "2021-09-02T17:00:34Z"
+  },
+  "status": true
+},{
+  "_id": {
+    "$oid": "61377db92f923f4f49ea71a8"
+  },
+  "pid": "1020003",
+  "name": "B460M Aorus Pro",
+  "desc": "GIGABYTE Mainboard",
+  "brand": "GIGABYTE",
+  "price": 3390,
+  "keyword": "B460M",
+  "cat": "102",
+  "date_added": {
+    "$date": "2021-09-02T17:00:12Z"
+  },
+  "status": true
+},{
+  "_id": {
+    "$oid": "61377e092f923f4f49ea71aa"
+  },
+  "pid": "1020005",
+  "name": "B450M Steel Legend",
+  "desc": "ASROCK Mainboard",
+  "brand": "ASROCK",
+  "price": 3350,
+  "keyword": "B450M",
+  "cat": "102",
+  "date_added": {
+    "$date": "2021-09-02T17:00:14Z"
+  },
+  "status": true
+},{
+  "_id": {
+    "$oid": "613780502f923f4f49ea71ae"
+  },
+  "pid": "1030003",
+  "name": "Radeon RX 570 8GT OC 8GB",
+  "desc": "AMD Graphics Processing Unit",
+  "brand": "MSI",
+  "price": 4990,
+  "keyword": "RX 570",
+  "cat": "103",
+  "date_added": {
+    "$date": "2021-09-02T17:00:18Z"
+  },
+  "status": true
+},{
+  "_id": {
+    "$oid": "6137807b2f923f4f49ea71af"
+  },
+  "pid": "1030004",
+  "name": "GTX 1650 SUPER GAMING X 4GB",
+  "desc": "NVIDIA Graphics Processing Unit",
+  "brand": "MSI",
+  "price": 5990,
+  "keyword": "GTX 1650",
+  "cat": "103",
+  "date_added": {
+    "$date": "2021-09-02T17:00:18Z"
+  },
+  "status": true
 },{
   "_id": {
     "$oid": "6137868e2f923f4f49ea71c4"
@@ -557,5 +431,171 @@
   "cat": "110",
   "date_added": {
     "$date": "2021-09-02T17:00:39Z"
-  }
+  },
+  "status": true
+},{
+  "_id": {
+    "$oid": "61377c012f923f4f49ea71a1"
+  },
+  "pid": "1010005",
+  "name": "Ryzen 5 3600",
+  "desc": "AMD CPU",
+  "brand": "AMD",
+  "price": 7050,
+  "keyword": "Ryzen 5",
+  "cat": "101",
+  "date_added": {
+    "$date": "2021-09-02T17:00:05Z"
+  },
+  "status": true
+},{
+  "_id": {
+    "$oid": "61377de52f923f4f49ea71a9"
+  },
+  "pid": "1020004",
+  "name": "A320M-A Pro",
+  "desc": "MSI Mainboard",
+  "brand": "MSI",
+  "price": 1390,
+  "keyword": "A320M",
+  "cat": "102",
+  "date_added": {
+    "$date": "2021-09-02T17:00:13Z"
+  },
+  "status": true
+},{
+  "_id": {
+    "$oid": "613786152f923f4f49ea71c3"
+  },
+  "pid": "1100002",
+  "name": "LS22R350FHEXXT",
+  "desc": "SAMSUNG Monitor",
+  "brand": "SAMSUNG",
+  "price": 2500,
+  "keyword": "21.5 1080p",
+  "cat": "110",
+  "date_added": {
+    "$date": "2021-09-02T17:00:38Z"
+  },
+  "status": true
+},{
+  "_id": {
+    "$oid": "61377cbb2f923f4f49ea71a5"
+  },
+  "pid": "1010009",
+  "name": "Core i7-11700K",
+  "desc": "Intel CPU",
+  "brand": "Intel",
+  "price": 13500,
+  "keyword": "Core i7",
+  "cat": "101",
+  "date_added": {
+    "$date": "2021-09-02T17:00:09Z"
+  },
+  "status": true
+},{
+  "_id": {
+    "$oid": "61377c212f923f4f49ea71a2"
+  },
+  "pid": "1010006",
+  "name": "Core i3-10105F",
+  "desc": "Intel CPU",
+  "brand": "Intel",
+  "price": 3090,
+  "keyword": "Core i3",
+  "cat": "101",
+  "date_added": {
+    "$date": "2021-09-02T17:00:06Z"
+  },
+  "status": true
+},{
+  "_id": {
+    "$oid": "61377e442f923f4f49ea71ab"
+  },
+  "pid": "1020006",
+  "name": "B560M Pro4",
+  "desc": "ASROCK Mainboard",
+  "brand": "ASROCK",
+  "price": 3650,
+  "keyword": "B560M",
+  "cat": "102",
+  "date_added": {
+    "$date": "2021-09-02T17:00:15Z"
+  },
+  "status": true
+},{
+  "_id": {
+    "$oid": "613781002f923f4f49ea71b0"
+  },
+  "pid": "1040001",
+  "name": "Hyper-X Fury DDR4 16GB (16GBx1) 2400 Black",
+  "desc": "KINGSTON RAM",
+  "brand": "KINGTON",
+  "price": 2990,
+  "keyword": "16GB (16GBx1)",
+  "cat": "104",
+  "date_added": {
+    "$date": "2021-09-02T17:00:19Z"
+  },
+  "status": true
+},{
+  "_id": {
+    "$oid": "613785aa2f923f4f49ea71c2"
+  },
+  "pid": "1100001",
+  "name": "EL2870U",
+  "desc": "BENQ Monitor",
+  "brand": "BENQ",
+  "price": 13990,
+  "keyword": "28 2K",
+  "cat": "110",
+  "date_added": {
+    "$date": "2021-09-02T17:00:37Z"
+  },
+  "status": true
+},{
+  "_id": {
+    "$oid": "61377ec52f923f4f49ea71ac"
+  },
+  "pid": "1030001",
+  "name": "RTX 3060 12GB",
+  "desc": "NVIDIA Graphics Processing Unit",
+  "brand": "NVIDIA",
+  "price": 11500,
+  "keyword": "RTX 3060",
+  "cat": "103",
+  "date_added": {
+    "$date": "2021-09-02T17:00:16Z"
+  },
+  "status": true
+},{
+  "_id": {
+    "$oid": "61377f592f923f4f49ea71ad"
+  },
+  "pid": "1030002",
+  "name": "GTX 1650 OC 4GB",
+  "desc": "NVIDIA Graphics Processing Unit",
+  "brand": "GIGABYTE",
+  "price": 12500,
+  "keyword": "GTX 1650",
+  "cat": "103",
+  "date_added": {
+    "$date": "2021-09-02T17:00:17Z"
+  },
+  "status": true
+},{
+  "_id": {
+    "$oid": "613783f62f923f4f49ea71bb"
+  },
+  "pid": "1070003",
+  "name": "CV650",
+  "desc": "CORSAIR Power Supply Unit",
+  "brand": "CORSAIR",
+  "price": 1990,
+  "keyword": "650W",
+  "cat": "107",
+  "date_added": {
+    "$date": "2021-09-02T17:00:30Z"
+  },
+  "status": true
 }]

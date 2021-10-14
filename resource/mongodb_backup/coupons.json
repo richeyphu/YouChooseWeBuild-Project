@@ -13,5 +13,13 @@
   "name": "50 Baht Discount",
   "code": "SALE50",
   "value": 50,
+  "status": false
+},{
+  "_id": {
+    "$oid": "616846f85d45833b6650458f"
+  },
+  "name": "200 Baht Discount",
+  "code": "SALE200",
+  "value": 200,
   "status": true
 }]
