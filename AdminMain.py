@@ -1852,6 +1852,7 @@ class Ui_frm_admin_main(object):
         email = c3.text()
 
         msg = QMessageBox()
+        msg.setWindowTitle("แก้ไขข้อมูลลูกค้า")
         confirm = msg.question(msg, "แก้ไขข้อมูลลูกค้า", "ยืนยันการแก้ไขข้อมูล", msg.Yes | msg.No)
         if confirm == msg.Yes:
             for btn in self.btn_cus_select:
