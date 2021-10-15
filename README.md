@@ -3,7 +3,7 @@
 |----|----|
 -->
 
-# YouChooseWeBuild-Project・[![License: MIT](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](LICENSE)
+# YouChooseWeBuild-Project・[![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE) [![wakatime](https://wakatime.com/badge/user/6f08f2a4-9df5-4773-bd82-9d6b289479dd/project/249a4ad6-7af2-4767-b5c7-753557f63b0f.svg)](https://wakatime.com/badge/user/6f08f2a4-9df5-4773-bd82-9d6b289479dd/project/249a4ad6-7af2-4767-b5c7-753557f63b0f)
 
 <div align="center">
 <img src="resource/logo/ucwb-logo1.png" alt="My Warehouse Logo" style="max-width: 100%; height: auto;">
