@@ -16,7 +16,7 @@
 ## Usage
 ### Run Script
 ```py
-$ python3 _run.py
+$ python _run.py
 ```
 ### Required Packages
 - [`PyQt5`](https://pypi.org/project/PyQt5/), [`PyQt5-stubs`](https://pypi.org/project/PyQt5-stubs/), [`pyqt5-tools`](https://pypi.org/project/pyqt5-tools/)
